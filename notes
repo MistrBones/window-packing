@@ -1,6 +1,7 @@
 // Current problems:
 // always results in square (less than optimally packed) outputs
 // is this a real problem its kind of aesthetically nice for what we want
+// gap support is broken because my original implementation was dumb (subtracting gap from x and y block size, works kind of but its not right because it doesnt respect aspect ratios. better to calculate a scaling factor to apply at placement time?)
 
 
 
