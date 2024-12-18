@@ -47,6 +47,7 @@ monitorJson=$(hyprctl monitors -j)
 json=$(hyprctl clients -j)
 adapter="hyprland"
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+active_workspace=$(hyprctl activeworkspace -j | jq '.id' )
 cd $SCRIPT_DIR
 cd ../
-node packing.js --monitor "$monitorJson" --windows "$json" --adapter hyprland --gap 5 --marginVertical 50 --marginHorizontal 50 --waybarHeight 20
+node packing.js --monitor "$monitorJson" --windows "$json" --adapter hyprland --gap 5 --marginVertical 50 --marginHorizontal 50 --waybarHeight 20 --activeWorkspace "$active_workspace"

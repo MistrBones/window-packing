@@ -58,6 +58,14 @@ function hyprlandAdapter(monitors, windows) {
         return;
     }
 
+    try {
+        var workspace = JSON.parse(parsedArgs.activeWorkspace);
+    }
+    catch (error) {
+        console.error("Required argument --activeWorkspace not seen.");
+        return;
+    }
+
     // First get the active monitor
     var monitors = Object.entries(monitors);
     var monitorId = 0;
@@ -78,7 +86,8 @@ function hyprlandAdapter(monitors, windows) {
     var targetWindows = [];
     for (var i = 0; i < windows.length; i++) {
         var window = windows[i][1];
-        if (window.monitor == monitorId) {
+        console.log(window.workspace);
+        if (window.monitor == monitorId && window.workspace.id == workspace) {
             window.width = window.size[0];
             window.height = window.size[1];
             targetWindows.push(window);
@@ -109,9 +118,7 @@ function hyprlandAdapter(monitors, windows) {
         }
         commandArray.forEach((command) => {
           console.log(command);
-          for (var i = 0; i < 20; i++) {
             exec(command);
-          }
         });
     }
 
