@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test playground</title>
+    <style>
+    body {
+      background: #1f1f1f;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    
+    .canvas {
+      background: #282828;
+      width: 1600px;
+      height: 900px;
+    }
+    </style>
+  </head>
+  <body>
+    <script>
+    function handleJs(e) {
+      e.preventDefault();
+      var input = event.target.querySelectorAll("textarea")[0];
+      code = input.value;
+      localStorage.setItem("code", code);
+      try {
+      eval(code);
+      }
+      catch (exception) {
+        alert("An error occurred, check console output");
+        console.log(exception);
+        console.trace();
+      }
+      return;
+    }
+    
+  </script>
+  <div style="margin-top: 35px; margin-bottom: 35px;">
+    <div class="canvas" style="position: relative;"></div>
+  </div>
+  <form onsubmit="return handleJs(event)" style="display: block; margin-bottom: 20px;">
+      <button style="padding: 20px 20px; text-align: center; display: block; margin: 20px auto;" type="submit">Evaluate</button>
+
+    <textarea name="code" id="code" style="width: 60vw; min-height: 350px; display: block;" placeholder="Enter code here"></textarea>
+  </form>
+  
+  <script>
+
+  var code = localStorage.getItem("code");
+  var codeEl = document.getElementById("code");
+  if (code) {
+    console.log("Getting code");
+  }
+      var target = document.querySelectorAll("textarea")[0];
+      target.value = code;
+      target.style.height = target.scrollHeight + "px";
+      target.addEventListener("input", (event) => {
+        event.target.style.height = event.target.scrollHeight + "px";
+      });
+  </script>
+
+  </body>
+</html>
