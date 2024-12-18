@@ -42,3 +42,6 @@ done
 #echo "${window_ids[@]}"
 
 # All windows have been toggled floating, time to get the window sizes and prepare to send off to the packing binary
+monitorJson=$(hyprctl monitors -j)
+json=$(hyptctl clients -j)
+adapter="hyprland"
