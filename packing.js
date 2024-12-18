@@ -14,13 +14,22 @@
   // convert that scaling factor into an absolute value
   // subtract that absolute value from the canvasHeight
   // return block placement
+
+  // broken:
+  // settings gaps seems to break centering on canvas
+  
+  // todo: sometimes when resizing blocks to use more width you use *most* of the width but lose a lot of height
+  // this is an easy fix by fixing the maxHeightRatio i think of just the parent blocks
+  // since our Y size is no longer always 100% of the canvas we need to update the yOffset to account for this
+
+
   rngSeed = getRandomInRange(1, 10000);
   //rngSeed = 20;
   canvasWidth = 1600;
   canvasHeight = 900;
   childrenPerBlock = 2;
 
-  gap = 7;
+  gap = 5;
   marginVertical = 2*0
   marginVertical += 2*gap;
   //marginTop += gap;
@@ -172,6 +181,7 @@
           var widthLeft = 1 - totalSideRatio;
           var widthDifference = averageBlockWidth - widthLeft;
           console.log("Additional width needed to create new row at current size: " + widthDifference);
+          console.log(Math.sign(widthDifference));
           if (Math.sign(widthDifference) == -1) {
             // We have a good candidate for canvas resizing
             console.log("Resizing canvas");
@@ -204,15 +214,15 @@
 
           var xOffset = gapAbsolute / 2;
           if (gap != 0) {
-              xOffset = (gapAbsolute) + (gap/2);
+              xOffset = (xOffset) + (gap/2);
           }
 
-          var yOffset = 0;
+          var yOffset = (canvasHeight - targetHeight)/2;
           //var verticalMargin = marginTop + marginBottom;
           if (marginVertical != 0) {
-              yOffset = marginVertical / 2;
+              yOffset = yOffset + (marginVertical / 2);
           }
-          yOffset = yOffset - (gap/2);
+          //yOffset = yOffset + (gap/4);
 
 
           placed = {
