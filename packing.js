@@ -8,7 +8,6 @@ canvasWidth = 1600;
 canvasHeight = 900;
 gap = 5;
 marginVertical = 2 * 50;
-marginVertical += 2 * gap;
 marginHorizontal = 2 * 50;
 
 var imageCount = 15;
