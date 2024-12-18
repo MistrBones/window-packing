@@ -1,10 +1,127 @@
+/*
+  This file is for prototyping the packing algorithm in the provided JS playground. Code ready for compiling to a binary belongs in packing.js
+*/
+
+var start = window.performance.now();
+rngSeed = getRandomInRange(1, 10000);
+//rngSeed = 25;
+
 loggingEnabled = true;
+
 canvasWidth = 1600;
 canvasHeight = 900;
 gap = 5;
 marginVertical = 2 * 50;
 marginHorizontal = 2 * 50;
-originalImages = [];
+
+var imageCount = 15;
+console.clear();
+var imageChoice = [{
+        width: 100,
+        height: 100
+    },
+    {
+        width: 512,
+        height: 768
+    },
+    {
+        width: 768,
+        height: 512
+    },
+    {
+        width: 16,
+        height: 9
+    },
+    {
+        width: 9,
+        height: 16
+    },
+    {
+        width: 4,
+        height: 3
+    },
+    {
+        width: 3,
+        height: 4
+    },
+    {
+        width: 21,
+        height: 9
+    },
+    {
+        width: 9,
+        height: 21
+    },
+    {
+        width: 16,
+        height: 10
+    },
+    {
+        width: 10,
+        height: 16
+    },
+    {
+        width: 3,
+        height: 2
+    },
+    {
+        width: 2,
+        height: 3
+    }
+];
+
+
+function RNG(seed) {
+    // LCG using GCC's constants
+    this.m = 0x80000000; // 2**31;
+    this.a = 1103515245;
+    this.c = 12345;
+
+    this.state = seed ? seed : Math.floor(Math.random() * (this.m - 1));
+}
+
+
+RNG.prototype.nextInt = function() {
+    this.state = (this.a * this.state + this.c) % this.m;
+    return this.state;
+}
+
+
+RNG.prototype.nextFloat = function() {
+    // returns in range [0,1]
+    return this.nextInt() / (this.m - 1);
+}
+
+
+RNG.prototype.nextRange = function(start, end) {
+    // returns in range [start, end): including start, excluding end
+    // can't modulu nextInt because of weak randomness in lower bits
+    var rangeSize = end - start;
+    var randomUnder1 = this.nextInt() / this.m;
+    return start + Math.floor(randomUnder1 * rangeSize);
+}
+
+
+RNG.prototype.choice = function(array) {
+    return array[this.nextRange(0, array.length)];
+}
+
+
+function getRandomInRange(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+
+function getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
 
 
 function shuffle(array) {
@@ -361,7 +478,8 @@ function logger(message) {
 
 
 // Begin main code
-
+rng = new RNG(rngSeed);
+originalImages = [];
 for (i = 0; i < imageCount; i++) {
     // get random number 0 through 2
     var index = rng.nextRange(0, imageChoice.length);
@@ -402,4 +520,63 @@ blocks = originalImages.reduce(function(map, image) {
 }, {});
 
 // Our blocks map is ready for placement
-return place(blocks);
+var placedImages = place(blocks);
+
+var div = document.createElement("div");
+div.style.width = "100%";
+div.style.height = "100%";
+
+var images = placedImages.images;
+// Randomly placing for the moment
+for (let i = 0; i < images.length; i++) {
+    var image = images[i];
+    var imageEl = document.createElement("div");
+    imageEl.style.height = image.finalHeight + "px";
+    imageEl.style.width = image.finalWidth + "px";
+    imageEl.style.background = getRandomColor();
+    imageEl.style.position = "absolute";
+    imageEl.style.top = image.y + "px";
+    imageEl.style.left = image.x + "px";
+    imageEl.style.opacity = "0.7";
+    div.append(imageEl);
+}
+
+// draw margins
+var margin = document.createElement("div");
+margin.style.height = (marginVertical / 2) + "px";
+margin.style.width = canvasWidth + "px";
+margin.style.background = "#FF0000";
+margin.style.position = "absolute";
+margin.style.top = "0px";
+margin.style.left = "0px";
+margin.style.opacity = "0.7";
+margin.className = "margin";
+div.append(margin);
+
+var margin = margin.cloneNode(true);
+margin.style.height = canvasHeight + "px";
+margin.style.width = (marginHorizontal / 2) + "px";
+div.append(margin);
+
+var margin = margin.cloneNode(true);
+margin.style.height = canvasHeight + "px";
+margin.style.width = (marginHorizontal / 2) + "px";
+margin.style.left = canvasWidth - (marginHorizontal / 2) + "px";
+div.append(margin);
+
+var margin = margin.cloneNode(true);
+margin.style.left = "0px";
+margin.style.top = canvasHeight - (marginVertical / 2) + "px";
+margin.style.height = (marginVertical / 2) + "px";
+margin.style.width = canvasWidth + "px";
+div.append(margin);
+
+var canvas = document.querySelectorAll(".canvas")[0];
+canvas.style.height = canvasHeight + "px";
+canvas.style.width = canvasWidth + "px";
+canvas.innerHTML = "";
+canvas.append(div);
+
+
+var end = window.performance.now();
+logger(end - start + " milliseconds");
