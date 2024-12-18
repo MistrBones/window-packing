@@ -1,6 +1,6 @@
 var start = window.performance.now();
 rngSeed = getRandomInRange(1, 10000);
-rngSeed = 24;
+rngSeed = 25;
 canvasWidth = 1600;
 canvasHeight = 900;
 childrenPerBlock = 2;
@@ -103,6 +103,69 @@ function getTotalSideRatio(blocks) {
   return totalSideRatio;
 }
 
+function getTotalBlockArea(blocks) {
+    var totalArea = 0;
+    var blocksArray = Object.entries(blocks);
+    for (i = 0; i < blocksArray.length; i++) {
+        var blockArea = blocksArray[i][1].maxWidthRatio * blocksArray[i][1].maxHeightRatio;
+        totalArea += blockArea;
+    }
+    return totalArea;
+}
+
+function getScalingFactorForBlocks(blocks) {
+    var blocksArray = Object.entries(blocks);
+    var totalSideRatio = getTotalSideRatio(blocksArray);
+    var widthLeft = 1 - totalSideRatio;
+    //console.log("Width left: " + widthLeft);
+    
+    // Sometimes we will have an organization of blocks that do not use up either of the axes
+    // This will calculate a scale factor to scale up until hitting the X or Y axes bounds
+    var gapAbsolute = widthLeft * originalTargetWidth;
+    var verticalGap = originalTargetRatio - blocksArray[0][1].maxHeightRatio;
+    var verticalGapAbsolute = verticalGap * originalTargetWidth;
+
+    //console.log("Vertical gap: " + verticalGapAbsolute);
+    //console.log("Horizontal gap: " + gapAbsolute);
+    //console.log("Original ratio: " + originalTargetRatio);
+
+    var marginRatio = marginHorizontal / canvasWidth;
+    var verticalMarginRatio = marginVertical / canvasWidth;
+    var horizontalGapAdjusted = gapAbsolute / (1 - marginRatio);
+    var verticalGapAdjusted = verticalGapAbsolute / (originalTargetRatio - verticalMarginRatio);
+
+
+
+    //console.log("horizontal gap adjusted: " + horizontalGapAdjusted);
+    //console.log("vertical gap adjusted: " + verticalGapAdjusted);
+
+    if (horizontalGapAdjusted < verticalGapAdjusted) {
+      // we will fill the X dimension before the Y dimension
+      //console.log("X dimension first");
+      //console.log(totalSideRatio);
+      var targetWidthRatio = 1;
+      return targetWidthRatio / totalSideRatio;
+      //console.log("Scale factor: " + scaleFactor);
+      for (var i = 0; i < blocksArray.length; i++) {
+          var block = blocksArray[i][1];
+          block.maxWidthRatio = block.maxWidthRatio * scaleFactor;
+          block.maxHeightRatio = block.maxHeightRatio * scaleFactor;
+      }
+    }
+    else {
+      // we will fill the Y dimension before the X dimension
+      //console.log("Y dimension first");
+      var targetHeightRatio = originalTargetRatio;
+      var totalHeightRatio = blocksArray[0][1].maxHeightRatio;
+      return targetHeightRatio / totalHeightRatio;
+      for (var i = 0; i < blocksArray.length; i++) {
+        var block = blocksArray[i][1];
+        block.maxWidthRatio = block.maxWidthRatio * scaleFactor;
+        block.maxHeightRatio = block.maxHeightRatio * scaleFactor;
+      }
+    }
+}
+
 
 targetHeight = canvasHeight - marginVertical  - (gap);
 targetWidth = canvasWidth - marginHorizontal - (gap);
@@ -115,7 +178,8 @@ targetRatio = targetHeight / targetWidth;
 originalTargetRatio = targetRatio;
 
 
-
+largestSeenArea = 0;
+originalPlacedBlocks = false;
 function place(blocks) {
 
 
@@ -150,15 +214,27 @@ function place(blocks) {
     } else {
 
         var averageBlockWidth = getAverageBlockWidth(blocks);
-        console.log("Average block width: " + averageBlockWidth);
+        //console.log("Average block width: " + averageBlockWidth);
 
         var widthLeft = 1 - totalSideRatio;
         var widthDifference = averageBlockWidth - widthLeft;
-        console.log("Additional width needed to create new row at current size: " + widthDifference);
-        console.log(Math.sign(widthDifference));
-        if (Math.sign(widthDifference) == -1) {
+        //console.log("Additional width needed to create new row at current size: " + widthDifference);
+        //console.log(Math.sign(widthDifference));
+        if (true && Math.sign(widthDifference) == -1) {
+
+            var blockArea = getTotalBlockArea(blocks);
+            var scaleFactor = getScalingFactorForBlocks(blocks);
+            var blockArea = blockArea * scaleFactor;
+            // we need to calculate a scaling factor to ensure we are comparing end results properly
+
+            if (blockArea > largestSeenArea) {
+                // We will save the currently calculated blocks incase this solution is better than the later one
+                console.log("Saving better potential solution");
+                originalPlacedBlocks = blocks;
+                largestSeenArea = blockArea;
+            }
           // We have a good candidate for canvas resizing
-          console.log("Resizing canvas");
+          //console.log("Resizing canvas");
           var magicNumber = Math.abs(widthDifference);
           if (canvasWidth > canvasHeight) {
               magicNumber = magicNumber*canvasWidth;
@@ -182,6 +258,17 @@ function place(blocks) {
           return place(blocks);
         }
 
+        if (originalPlacedBlocks) {
+            // We need to compare current blocks to the original blocks to make sure our new solution is actually better
+            var newBlocksArea = getTotalBlockArea(blocks);
+            console.log("New block area: " + newBlocksArea);
+            console.log("Original blocks area: " + largestSeenArea);
+            if (newBlocksArea < largestSeenArea) {
+                console.log("Original solution is better");
+                blocks = originalPlacedBlocks;
+            }
+        }
+
         // We did not overflow the canvas which means we can now place our blocks
         // this will require logic for the following: 
         // converting ratios -> pixel sizes
@@ -195,51 +282,13 @@ function place(blocks) {
         // figure image offsets based on block offset + perviousImageHeight
         // figure the gap left on the edges. divide by 2 and set xOffset to value to center images
 
+        var scalingFactor = getScalingFactorForBlocks(blocks);
+        console.log(scalingFactor);
+
         var blocksArray = Object.entries(blocks);
-        var gapAbsolute = widthLeft * originalTargetWidth;
-        var verticalGap = originalTargetRatio - blocksArray[0][1].maxHeightRatio;
-        var verticalGapAbsolute = verticalGap * originalTargetWidth;
-
-        console.log("Vertical gap: " + verticalGapAbsolute);
-        console.log("Horizontal gap: " + gapAbsolute);
-        console.log("Original ratio: " + originalTargetRatio);
-
-        var marginRatio = marginHorizontal / canvasWidth;
-        var verticalMarginRatio = marginVertical / canvasWidth;
-        var horizontalGapAdjusted = gapAbsolute / (1 - marginRatio);
-        var verticalGapAdjusted = verticalGapAbsolute / (originalTargetRatio - verticalMarginRatio);
-
-        console.log("horizontal gap adjusted: " + horizontalGapAdjusted);
-        console.log("vertical gap adjusted: " + verticalGapAdjusted);
-
-        if (horizontalGapAdjusted < verticalGapAdjusted) {
-          // we will fill the X dimension before the Y dimension
-          console.log("X dimension first");
-          console.log(totalSideRatio);
-          var targetWidthRatio = 1;
-          var scaleFactor = targetWidthRatio / totalSideRatio;
-          console.log("Scale factor: " + scaleFactor);
-          for (var i = 0; i < blocksArray.length; i++) {
-              var block = blocksArray[i][1];
-              block.maxWidthRatio = block.maxWidthRatio * scaleFactor;
-              block.maxHeightRatio = block.maxHeightRatio * scaleFactor;
-          }
-          gapAbsolute = 0;
-          verticalGapAbsolute = 0;
-        }
-        else {
-          // we will fill the Y dimension before the X dimension
-          console.log("Y dimension first");
-          var targetHeightRatio = originalTargetRatio;
-          var totalHeightRatio = blocksArray[0][1].maxHeightRatio;
-          var scaleFactor = targetHeightRatio / totalHeightRatio;
-          for (var i = 0; i < blocksArray.length; i++) {
-            var block = blocksArray[i][1];
-            block.maxWidthRatio = block.maxWidthRatio * scaleFactor;
-            block.maxHeightRatio = block.maxHeightRatio * scaleFactor;
-        }
-        gapAbsolute = 0;
-        verticalGapAbsolute = 0;
+        for (i = 0; i < blocksArray.length; i++) {
+            blocksArray[i][1].maxHeightRatio = blocksArray[i][1].maxHeightRatio*scalingFactor;
+            blocksArray[i][1].maxWidthRatio = blocksArray[i][1].maxWidthRatio*scalingFactor;
         }
 
         // now we need to recalculate the gaps
@@ -471,7 +520,6 @@ margin.style.top = "0px";
 margin.style.left = "0px";
 margin.style.opacity = "0.7";
 margin.className = "margin";
-console.log(margin);
 div.append(margin);
 
 
