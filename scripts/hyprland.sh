@@ -43,5 +43,10 @@ done
 
 # All windows have been toggled floating, time to get the window sizes and prepare to send off to the packing binary
 monitorJson=$(hyprctl monitors -j)
-json=$(hyptctl clients -j)
+#echo $monitorJson
+json=$(hyprctl clients -j)
 adapter="hyprland"
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+cd $SCRIPT_DIR
+cd ../
+node packing.js --monitor "$monitorJson" --windows "$json" --adapter hyprland --gap 5 --marginVertical 50 --marginHorizontal 50 --waybarHeight 20

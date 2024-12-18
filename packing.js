@@ -1,11 +1,123 @@
-loggingEnabled = true;
-canvasWidth = 1600;
-canvasHeight = 900;
-gap = 5;
-marginVertical = 2 * 50;
-marginHorizontal = 2 * 50;
+const { exec } = require('child_process');
+const userArgs = process.argv.splice(2);
+var parsedArgs = {};
+for (var i = 0; i < userArgs.length; i++) {
+  var argument = userArgs[i];
+  if (argument.startsWith("--")) {
+    // named argument
+    i++;
+    
+    parsedArgs[argument.substring(2)] = userArgs[i];
+  }
+}
+console.log(parsedArgs);
+loggingEnabled = false;
+canvasWidth = 0;
+canvasHeight = 0;
+gap = parsedArgs?.gap ?? 0;
+marginVertical = parsedArgs?.marginVertical*2 ?? 0;
+marginHorizontal = parsedArgs?.marginHorizontal*2 ?? 0;
 originalImages = [];
+monitorXOffset = 0;
+monitorYOffset = 0;
+console.log(monitorYOffset);
 
+
+adapterCallback = (windows) => {
+    console.error("No adapter callback function was set. Check your adapter function to ensure that adapterCallback is overwritten");
+    return;
+}
+
+var adapter = parsedArgs?.adapter;
+if (!adapter) {
+    console.error("An adapter must be specified");
+    return;
+}
+if (adapter == "hyprland") {
+  hyprlandAdapter(parsedArgs?.monitors, parsedArgs?.windows);
+}
+
+console.log("Canvas width: " + canvasWidth)
+console.log("Canvas height: " + canvasHeight)
+
+
+function hyprlandAdapter(monitors, windows) {
+    // Get our required arguments and return an error if one isn't seen
+    try {
+        var monitors = JSON.parse(parsedArgs.monitor);
+    }
+    catch (error) {
+        console.error("Required argument --monitors not seen");
+        return;
+    }
+    try {
+        var windows = JSON.parse(parsedArgs.windows);
+    }
+    catch (error) {
+        console.error("Required argument --windows not seen.");
+        return;
+    }
+
+    // First get the active monitor
+    var monitors = Object.entries(monitors);
+    var monitorId = 0;
+    for (var i = 0; i < monitors.length; i++) {
+        var monitor = monitors[i][1];
+        if (monitor.focused) {
+            monitorId = monitor.id;
+            monitorXOffset = monitor.x;
+            monitorYOffset = monitor.y;
+            monitorYOffset += parseInt(parsedArgs?.waybarHeight ?? 0);
+            canvasWidth = monitor.width;
+            canvasHeight = monitor.height;
+            break;
+        }
+    }
+
+    var windows = Object.entries(windows);
+    var targetWindows = [];
+    for (var i = 0; i < windows.length; i++) {
+        var window = windows[i][1];
+        if (window.monitor == monitorId) {
+            window.width = window.size[0];
+            window.height = window.size[1];
+            targetWindows.push(window);
+        }
+    }
+
+    originalImages = targetWindows;
+
+    adapterCallback = (windows) => {
+        console.log(windows);
+        var commandArray = [];
+        for (var i = 0; i < windows.images.length; i++) {
+            var window = windows.images[i];
+            var width = Math.round(window.finalWidth);
+            var height = Math.round(window.finalHeight);
+            var address = window.address;
+            var resizeCommand = "hyprctl dispatch resizewindowpixel exact " + width + " " + height + ",address:" + address;
+            
+            console.log(monitorYOffset);
+            window.x = window.x + monitorXOffset;
+            window.y = window.y + monitorYOffset;
+            window.x = Math.round(window.x);
+            window.y = Math.round(window.y);
+            var moveCommand = "hyprctl dispatch movewindowpixel exact " + window.x + " " + window.y + ",address:" + address;
+
+            commandArray.push(resizeCommand);
+            commandArray.push(moveCommand);
+        }
+        commandArray.forEach((command) => {
+          console.log(command);
+          for (var i = 0; i < 20; i++) {
+            exec(command);
+          }
+        });
+    }
+
+    return targetWindows;
+
+}
 
 function shuffle(array) {
     let currentIndex = array.length;
@@ -125,7 +237,7 @@ function place(blocks) {
 
         if (totalSideRatio > 1) {
             // We dont need to calculate anymore
-            break;
+            //break;
         }
 
         var scale_factor = block.ratio / targetRatio;
@@ -288,12 +400,12 @@ function sizeAndPositionBlocks(block, blockWidth, placed) {
         // Image seen, time to size and place
         var imageWidth = blockWidth;
         var imageHeight = (imageWidth * block.ratio);
-        block.finalHeight = imageHeight - gap;
-        block.finalWidth = imageWidth - gap;
+        block.finalHeight = imageHeight;
+        block.finalWidth = imageWidth;
         block.x = placed.xOffset;
         block.y = placed.yOffset;
         placed.images.push(block);
-        placed.yOffset = placed.yOffset + block.finalHeight + gap;
+        placed.yOffset = placed.yOffset + block.finalHeight + 2*gap;
     }
     return placed;
 }
@@ -361,19 +473,12 @@ function logger(message) {
 
 
 // Begin main code
-
-for (i = 0; i < imageCount; i++) {
-    // get random number 0 through 2
-    var index = rng.nextRange(0, imageChoice.length);
-    var image = structuredClone(imageChoice[index]);
-    originalImages.push(image);
-}
-
-
 targetHeight = canvasHeight - marginVertical - (gap);
 targetWidth = canvasWidth - marginHorizontal - (gap);
 originalTargetWidth = targetWidth;
 origianlTargetHeight = targetHeight;
+console.log("Target height: " + targetHeight);
+console.log("Target width: " + targetWidth);
 
 
 // Gives ratio as width:height where height == 1
@@ -395,6 +500,8 @@ originalImages.forEach((image) => {
     image.index = "image-" + i;
     i++;
 });
+console.log(originalImages);
+
 map = {};
 blocks = originalImages.reduce(function(map, image) {
     map[image.index] = image;
@@ -402,4 +509,6 @@ blocks = originalImages.reduce(function(map, image) {
 }, {});
 
 // Our blocks map is ready for placement
-return place(blocks);
+var placed = place(blocks);
+adapterCallback(placed);
+return;
