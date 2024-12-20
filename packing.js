@@ -75,9 +75,10 @@ function hyprlandAdapter(monitors, windows) {
             monitorId = monitor.id;
             monitorXOffset = monitor.x;
             monitorYOffset = monitor.y;
-            monitorYOffset += parseInt(parsedArgs?.waybarHeight ?? 0);
+            waybarHeight = parseInt(parsedArgs?.waybarHeight ?? 0);
+            monitorYOffset += (waybarHeight);
             canvasWidth = monitor.width;
-            canvasHeight = monitor.height;
+            canvasHeight = monitor.height - waybarHeight;
             break;
         }
     }
