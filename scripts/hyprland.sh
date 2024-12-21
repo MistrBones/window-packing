@@ -1,4 +1,6 @@
 #!/bin/bash
+active_workspace=$(hyprctl activeworkspace -j | jq '.id' )
+
 mapfile -t monitors_lines < <(hyprctl monitors)
 for line in "${monitors_lines[@]}"; do
   if [[ $line == *"Monitor"* ]]; then
@@ -23,31 +25,34 @@ for line in "${client_lines[@]}"; do
   if [[ $line == *"floating"* ]]; then
     floating=$(echo $line | grep -oP 'floating:\s([A-Za-z0-9]+)' | sed 's/floating:\s*//;s/[()]//g')
   fi
-    if [[ $line == *"monitor:"* ]]; then
-      # Check if window is on the right monitor
-      monitor=$(echo $line | grep -oP 'monitor:\s([A-Za-z0-9]+)' | sed 's/monitor:\s*//;s/[()]//g')
-      if [[ $monitor == $monitor_id ]]; then 
-        if [[ -n "$window_id" ]]; then
+  if [[ $line == *"workspace:"* ]] then
+    workspace=$(echo $line | grep -oP 'workspace:\s([A-Za-z0-9]+)' | sed 's/workspace:\s*//;s/[()]//g')
+  fi
+  if [[ $line == *"monitor:"* ]]; then
+    # Check if window is on the right monitor
+    monitor=$(echo $line | grep -oP 'monitor:\s([A-Za-z0-9]+)' | sed 's/monitor:\s*//;s/[()]//g')
+
+    if [[ $monitor == $monitor_id ]]; then 
+      if [[ -n "$window_id" ]]; then
         if [[ $floating == 0 ]]; then
-          echo $window_id
-          hyprctl dispatch togglefloating address:0x"$window_id"
-        fi
-        else
-        echo "No valid window_id found!"
+          if [[ $workspace == $active_workspace ]]; then
+            echo $window_id
+            hyprctl dispatch togglefloating address:0x"$window_id"
+          fi
         fi
       fi
     fi
+  fi
 done
 # Final output
 #echo "${window_ids[@]}"
 
-# All windows have been toggled floating, time to get the window sizes and prepare to send off to the packing binary
+# All windows have been toggled floating, time to get the window sizes and prepare to send off to the packing script
 monitorJson=$(hyprctl monitors -j)
 #echo $monitorJson
 json=$(hyprctl clients -j)
 adapter="hyprland"
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-active_workspace=$(hyprctl activeworkspace -j | jq '.id' )
 cd $SCRIPT_DIR
 cd ../
 node packing.js --monitor "$monitorJson" --windows "$json" --adapter hyprland --gap 0 --marginVertical 0 --marginHorizontal 0 --waybarHeight 50 --activeWorkspace "$active_workspace"

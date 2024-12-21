@@ -1,3 +1,44 @@
+CLI argument conventions
+
+https://www.gnu.org/prep/standards/standards.html#Command_002dLine-Interfaces
+https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html
+
+On POSIX systems (e.g. Linux, MacOSX), at least for programs possibly started in a shell terminal (e.g. most of them), I would recommend using the GNU coding conventions (which also lists common argument names) and look into the POSIX utilities guidelines, even for proprietary software:
+
+    always handle --version and --help (even /bin/true accepts them!!). I curse the authors of software not understanding --help, I hate them (because prog --help is the first command I am trying on a new program)! Often --help can be abbreviated as -h
+
+    Have the --help message list all the options (unless you have too many of them... in that case list the most common ones and explicitly refer to some man page or some URL) and default values of options, and perhaps important (and program-specific) environment variables. Show these option lists on option argument error.
+
+    accept -a short argument (single letter) and have some equivalent --long-argument, so -a2 --long-argument=2, --long-argument 2; of course you could have (for rarely used options) some --only-long-argument name; for modal arguments without extra options -cf is generally handled as -c -f, etc. so your -argument:value proposal is weird, and I don't recommend doing that.
+
+    use GLIBC getopt_long or better (e.g. argp_parse, in OCaml it's Arg module, ...)
+
+    often use - for standard input or output (if you can't do that, handle /dev/stdin & /dev/stdout even on the few operating systems not having them)
+
+    mimic the behavior of similar programs by reusing most of their options conventions; in particular -n for dry run (à la make), -h for help, -v for verbosity, etc...
+
+    use -- as separator between options & file or other arguments
+
+    if your program uses isatty to test than stdin is a terminal (and behave "interactively" in that case), provide an option to force non-interactive mode, likewise if your program has a GUI interface (and tests getenv("DISPLAY") on X11 desktop) but could also be used in batch or command line.
+
+    Some programs (e.g. gcc) accept indirect argument lists, so @somefile.txt is meaning read program arguments from somefile.txt; this could be useful when your program might accept a very big lot of arguments (more than your kernel's ARG_MAX)
+
+BTW, you might even add some auto-complete facilities for your program and usual shells (like bash or zsh)
+
+Some old Unix commands (e.g. dd, or even sed) have weird command arguments for historical compatibility. I would recommend not following their bad habits (unless you are making some better variant of them).
+
+If your software is a series of related command-line programs, take inspiration from git (which you surely use as a development tool), which accepts git help and git --help and have many gitsubcommand and gitsubcommand--help
+
+In rare cases you might also use argv[0] (by using symlinks on your program), e.g. bash invoked as rbash has a different behavior (restricted shell). But I usually don't recommend doing that; it might make sense if your program could be used as a script interpreter using shebang i.e. #! on first line interpreted by execve(2). If you do such tricks, be sure to document them, including in --help messages.
+
+Remember that on POSIX the shell is globbing arguments (before running your program!), so avoid requiring characters (like * or $ or ~) in options which would need to be shell-escaped.
+
+In some cases, you could embed an interpreter like GNU guile or Lua in your software (avoid inventing your own Turing-complete scripting language if you are not expert in programming languages). This has deep consequences on the design of your software (so should be thought of early!). You should then easily be able to pass some script or some expression to that interpreter. If you take that interesting approach, design your software and its interpreted primitives with care; you could have some weird user coding big scripts for your thing.
+
+In other cases, you might want to let your advanced users load their plugin into your software (using dynamic loading techniques à la dlopen & dlsym). Again, this is a very important design decision (so define and document the plugin interface with care), and you'll need to define a convention to pass program options to these plugins.
+
+If your software is a complex thing, make it accept some configuration files (in addition or replacement of program arguments) and probably have some way to test (or just parse) these configuration files without running all the code. For example, a mail transfer agent (like Exim or Postfix) is quite complex, and it is useful to be able to "half-dry" run it (e.g. observing how it is handling some given email address without actually sending an email).
+
 // Current problems:
 // always results in square (less than optimally packed) outputs
 // is this a real problem its kind of aesthetically nice for what we want
