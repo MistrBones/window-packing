@@ -26,10 +26,12 @@ export const adapt = ( args ) => {
 
     // First get the active monitor
     var monitors = Object.entries(monitors);
-    var monitorId = undefined;
+    let monitorId = undefined;
     for (var i = 0; i < monitors.length; i++) {
         var monitor = monitors[i][1];
+        console.log(monitor);
         if (monitor.focused) {
+            console.log("Monitor is focused");
             monitorId = monitor.id;
             var monitorXOffset = monitor.x;
             var monitorYOffset = monitor.y;
@@ -40,7 +42,8 @@ export const adapt = ( args ) => {
             break;
         }
     }
-    if (!monitorId) {
+    console.log(typeof(monitorId));
+    if (typeof(monitorId) === 'undefined') {
       throw new Error("No active monitor found");
     }
 
