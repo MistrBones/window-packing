@@ -1,3 +1,6 @@
+var monitorXOffset = 0;
+var monitorYOffset = 0;
+
 export const adapt = ( args ) => {
     // Get our required arguments and return an error if one isn't seen
     try {
@@ -17,7 +20,7 @@ export const adapt = ( args ) => {
 
     try {
         var workspace = JSON.parse(args.activeWorkspace);
-        console.log(workspace);
+        //console.log(workspace);
     }
     catch (error) {
         console.error("Required argument --activeWorkspace not seen.");
@@ -29,12 +32,11 @@ export const adapt = ( args ) => {
     let monitorId = undefined;
     for (var i = 0; i < monitors.length; i++) {
         var monitor = monitors[i][1];
-        console.log(monitor);
+        //console.log(monitor);
         if (monitor.focused) {
-            console.log("Monitor is focused");
             monitorId = monitor.id;
-            var monitorXOffset = monitor.x;
-            var monitorYOffset = monitor.y;
+            monitorXOffset = monitor.x;
+            monitorYOffset = monitor.y;
             var waybarHeight = parseInt(args?.waybarHeight ?? 0);
             monitorYOffset += (waybarHeight);
             var canvasWidth = monitor.width;
@@ -42,7 +44,7 @@ export const adapt = ( args ) => {
             break;
         }
     }
-    console.log(typeof(monitorId));
+    //console.log(typeof(monitorId));
     if (typeof(monitorId) === 'undefined') {
       throw new Error("No active monitor found");
     }
