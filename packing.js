@@ -1,3 +1,9 @@
+// how our ratios work
+// all absolute sizes are converted to relative sizes in the form of ratios
+// so 1600w x 900h becomes 16:9
+// we always represent the width as 1 so we re-calculate that ratio
+// so 16:9 -> 1:0.5625
+
 async function main() {
     const userArgs = process.argv.splice(2);
     var parsedArgs = {};
@@ -24,6 +30,7 @@ async function main() {
 
     const outputs = adapter.adapt(parsedArgs);
 
+    //console.log(outputs);
     images = outputs.windows;
     canvasWidth = outputs.canvasWidth;
     canvasHeight = outputs.canvasHeight;
@@ -96,7 +103,28 @@ async function main() {
         }
         return totalArea;
     }
-    
+
+    // We need this for determining block orientations when preparing to add our gaps at the end
+    function getBlockHeight(blocks) {
+        return blocks[0].maxHeightRatio;
+    }
+
+    // takes a top level pseudo block and returns how many non-pseudo block children it contains
+    // will use this when doing gap calculations
+    function getTotalBlockChildren(block, count = 0) {
+        if (block.type == "block") {
+            // we have a pseudo block
+            var children = block.children;
+            for (var i = 0; i < children.length; i++) {
+                var child = children[i];
+                count += getTotalBlockChildren(child, 0);
+            }
+        }
+        else if (block.type == "image") {
+            count++;
+        }
+        return count;
+    }
     
     // A scaling factor is used as part of transforming from relative values to absolute sizes
     // We calculate this instead of calculating directly using the relative value + canvas size because some final solutions will not use the full width and height which allows room for additional scaling.
@@ -126,6 +154,7 @@ async function main() {
             // we will fill the Y dimension before the X dimension
             var targetHeightRatio = originalTargetRatio;
             var totalHeightRatio = blocksArray[0][1].maxHeightRatio;
+            //console.log("Total height ratio in getScalingFactorForBlocks: " + totalHeightRatio);
             return targetHeightRatio / totalHeightRatio;
         }
     }
@@ -141,6 +170,8 @@ async function main() {
     // Handles all logic for taking the current list of blocks and combining them into pseudo-blocks 
     function place(blocks) {
         placeCalledCount++;
+        gapRelative = (gap / targetWidth);
+        //console.log(blocks);
     
         // We will be placing images in blocks
         // Some blocks will be combinations of 3+ images
@@ -148,24 +179,34 @@ async function main() {
         // We will check if all images will fit when fully scaled to the canvas
     
         var totalSideRatio = 0;
+
+        var blocksObj = Object.entries(blocks);
+        var blockCount = blocksObj.length;
+
+        totalSideRatio += (gapRelative*(blockCount-1));
+        console.log(totalSideRatio);
+
         for (const [index, block] of Object.entries(blocks)) {
     
-            if (totalSideRatio > 1) {
-                // We dont need to calculate anymore
-                break;
-            }
+
     
             var scale_factor = block.ratio / targetRatio;
+            console.log("block ratio: " + block.ratio);
             block.maxHeightRatio = block.ratio / scale_factor;
+            console.log(block.maxHeightRatio);
             block.maxWidthRatio = 1 / scale_factor;
             totalSideRatio += block.maxWidthRatio;
-    
         }
-    
+        //totalSideRatio -= gapRelative;
+        console.log("after count: " + totalSideRatio);
+
+        
         if (totalSideRatio > 1) {
     
             // We would overflow the canvas by placing images side by side at maximum height so we must resize+pack differently
             // Call a function to decide which images to combine into a block. Function will update our map combining two existing blocks into a new pseudo block.
+            console.log("denying solution");
+            //console.log(blocks);
             var newBlocks = createNewBlock(blocks);
             return place(newBlocks);
        
@@ -213,7 +254,6 @@ async function main() {
                     map[image.index] = image;
                     return map;
                 }, {});
-                
                 if (!previousSolution || placeCalledCount < placeCalledMaxCount) {
                     // There is no previous calculated solution and we haven't exceeded the max call count
                     return place(blocks);
@@ -235,10 +275,12 @@ async function main() {
             // We did not overflow the canvas which means we can now place our blocks
     
             // We might need to scale up our solution. Because searching for better solutions involves decreasing the targetHeight we need to scale our newfound solutions back up to use maximum available space based on our actual canvas' size
+            //console.log(blocks);
             var scalingFactor = getScalingFactorForBlocks(blocks);
     
             // Apply the additional scaling factor needed to get back to our actual canvas size
             var blocksArray = Object.entries(blocks);
+            console.log("applying scaling factors");
             for (i = 0; i < blocksArray.length; i++) {
                 blocksArray[i][1].maxHeightRatio = blocksArray[i][1].maxHeightRatio * scalingFactor;
                 blocksArray[i][1].maxWidthRatio = blocksArray[i][1].maxWidthRatio * scalingFactor;
@@ -250,8 +292,8 @@ async function main() {
             var gapAbsolute = widthLeft * originalTargetWidth;
             var verticalGap = originalTargetRatio - blocksArray[0][1].maxHeightRatio;
             var verticalGapAbsolute = verticalGap * originalTargetWidth;
-    
-            var yOffset = (marginVertical / 2) + (verticalGapAbsolute / 2) + (1 * gap);
+
+            var yOffset = (marginVertical / 2) + (verticalGapAbsolute / 2);
             var xOffset = (marginHorizontal / 2) + (gapAbsolute / 2) + (1 * gap);
     
             // the xOffset and yOffset properties here will allow to track the cumulative offsets from previously placed blocks once we call the sizeAndPositionBlocks() function
@@ -286,14 +328,87 @@ async function main() {
             // Or we can skip all sorting and add blocks in whatever order they come in
             var sorted = gaussianArray;
             shuffle(sorted);
+
+            // Attempt to calculate gaps before final placement
+            // need to know if solution is wider or taller
+            // totalSideRatio represents width where 1 = full width of container
+            //
+            //console.log("scale factor: " + scale_factor);
+            //console.log("width ratio: " + newSideRatio);
+            //console.log("block height: " + getBlockHeight(sorted));
+            //console.log("target ratio: " + originalTargetRatio);
+            //console.log("height ratio: " + (getBlockHeight(sorted) / originalTargetRatio));
+            //console.log(sorted);
+            // represents the percentage of total vertical space used as a value between 0 and 1
+            var heightRatioFilled = getBlockHeight(sorted) / originalTargetRatio;
+            if (newSideRatio > heightRatioFilled) {
+                console.log("more horizontal space used than vertical");
+                // more horizontal space filled compared to vertical
+                // this means that to calculate gaps we will subtract from the width before the height
+                //console.log("gap relative: " + gapRelative);
+
+                // now with our gapRelative calculated we must find out which top level block has the widest? tallest?? aspect ratio
+                var largestSeen = 0;
+                var blockSeen = undefined;
+                for (var i = 0; i < sorted.length; i++) {
+                    //console.log("checking block");
+                    //console.log(sorted[i]);
+                    //console.log("Number of block children: " + getTotalBlockChildren(sorted[i]));
+                    
+                    var ratio = sorted[i].maxHeightRatio / sorted[i].maxWidthRatio;
+                    if (ratio > largestSeen) {
+                        largestSeen = ratio;
+                        blockSeen = sorted[i];
+                    }
+                }
+
+                // now that we have the largest seen, we will figure out our scaling factor
+                //var blockWidthMinusGap = blockSeen.maxWidthRatio - gapRelative;
+                //gapScalingFactor = blockWidthMinusGap / blockSeen.maxWidthRatio;
+                //console.log("gap scaling factor:" + gapScalingFactor);
+            }
+            else {
+                console.log("more vertical space used than horizontal");
+                // more vertical space filled compared to horizontal
+                // this means that to calculate gaps we will subtract from the height before the width
+                var gapRelative = (gap / canvasWidth) * originalTargetRatio;
+            }
     
             // Calculate placed image X and Y positions
             for (var i = 0; i < sorted.length; i++) {
                 var block = sorted[i];
+                var totalBlockChildren = getTotalBlockChildren(sorted[i]);
+                if (newSideRatio > heightRatioFilled) {
+                    // we will subtract from our height first
+                    var targetHeightRatio = block.maxHeightRatio - ((totalBlockChildren - 1)*(gapRelative/targetRatio));
+                    var scalingFactor = (targetHeightRatio / block.maxHeightRatio);
+                }
+                else {
+                    // we will subtract from our width first
+                    var targetWidthRatio = block.maxWidthRatio - gapRelative;
+                    var scalingFactor = (targetWidthRatio / block.maxWidthRatio);
+                }
+
+                //console.log("total children: " + totalBlockChildren);
+                //console.log(block);
+                //console.log("scaling factor: " + scalingFactor);
+                //console.log(block);
+                var blockWidth = block.maxWidthRatio * scalingFactor * targetWidth;
+                //console.log("block width: " + blockWidth);
                 placed.yOffset = yOffset;
-                var blockWidth = block.maxWidthRatio * targetWidth;
+                var blockWidthMinusGap = block.maxWidthRatio - gapRelative;
+                //var gapScalingFactor = newSideRatioMinusGap / newSideRatio;
+                //var blockWidth = block.maxWidthRatio * targetWidth;
+                //if (block.type == "block") {
+                //    var blockWidth = (block.maxWidthRatio * gapScalingFactor) * targetWidth;
+                //}
+                //else {
+                //    var blockWidth = (block.maxWidthRatio * gapScalingFactor) * targetWidth;
+                //}
+
                 placed = sizeAndPositionBlocks(block, blockWidth, placed);
-                placed.xOffset = placed.xOffset + blockWidth;
+                //console.log(gap);
+                placed.xOffset = placed.xOffset + (gap*1) + (blockWidth);// + gap*2;
             }
     
             return placed;
@@ -319,7 +434,7 @@ async function main() {
             block.x = placed.xOffset;
             block.y = placed.yOffset;
             placed.images.push(block);
-            placed.yOffset = placed.yOffset + block.finalHeight + 2*gap;
+            placed.yOffset = placed.yOffset + block.finalHeight + 1*gap;
         }
         return placed;
     }
@@ -389,8 +504,8 @@ async function main() {
     }
     
     // Begin main code
-    targetHeight = canvasHeight - marginVertical - (gap);
-    targetWidth = canvasWidth - marginHorizontal - (gap);
+    targetHeight = canvasHeight - marginVertical - (gap*1);
+    targetWidth = canvasWidth - marginHorizontal - (gap*1);
     originalTargetWidth = targetWidth;
     origianlTargetHeight = targetHeight;
     

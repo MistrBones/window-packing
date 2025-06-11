@@ -33,7 +33,7 @@ export const adapt = ( args ) => {
     for (var i = 0; i < monitors.length; i++) {
         var monitor = monitors[i][1];
         //console.log(monitor);
-        if (monitor.focused) {
+        if (monitor.id == workspace) {
             monitorId = monitor.id;
             monitorXOffset = monitor.x;
             monitorYOffset = monitor.y;
