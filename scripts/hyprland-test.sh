@@ -1,5 +1,5 @@
 #!/bin/bash
-active_workspace=$(hyprctl activeworkspace -j | jq '.id' )
+active_workspace=1
 
 mapfile -t monitors_lines < <(hyprctl monitors)
 for line in "${monitors_lines[@]}"; do
