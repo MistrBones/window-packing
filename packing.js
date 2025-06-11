@@ -168,6 +168,8 @@ async function main() {
     
     // Global variables (use only within place() function)
     var largestSeenArea = 0;
+    var largestSeenWidth = canvasWidth;
+    var largestSeenHeight = canvasHeight;
     var previousSolution = false;
     // We will track how many times the place() function is called to ensure we don't get in an infinite loop
     var placeCalledCount = 0;
@@ -205,6 +207,10 @@ async function main() {
             return place(newBlocks);
        
         } else {
+
+            if (length == 1) {
+                console.log("got length 1");
+            }
 
             // Blocks would not overflow canvas if placed now
             var averageBlockWidth = getAverageBlockWidth(blocks);
@@ -264,6 +270,9 @@ async function main() {
                 if (newBlocksArea < largestSeenArea) {
                     logger("Original solution is better");
                     blocks = previousSolution;
+                    canvasWidth = largestSeenWidth;
+                    canvasHeight = largestSeenHeight;
+                    targetRatio = canvasHeight/canvasWidth;
                 }
             }
     
@@ -289,7 +298,7 @@ async function main() {
             //console.log("horizontalRatio: " + horizontalRatio);
             var verticalGapAbsolute = verticalGap * originalTargetWidth;
 
-            var yOffset = (marginVertical / 2) + (verticalGapAbsolute / 2) + (0.5*gap);
+            var yOffset = (marginVertical / 2) + (verticalGapAbsolute / 2) + (0*gap);
             var xOffset = (marginHorizontal / 2) + (gapAbsolute / 2) + (0 * gap);
     
             // the xOffset and yOffset properties here will allow to track the cumulative offsets from previously placed blocks once we call the sizeAndPositionBlocks() function
@@ -375,7 +384,9 @@ async function main() {
             }
     
             // Calculate placed image X and Y positions
-            var canvasRatio = targetHeight/targetWidth;
+            var finalCanvasHeight = canvasHeight - marginVertical - (2*gap);
+            var finalCanvasWidth = canvasWidth - marginHorizontal - (2*gap);
+            var canvasRatio = finalCanvasHeight/finalCanvasWidth;
             for (var i = 0; i < sorted.length; i++) {
                 var block = sorted[i];
                 var totalBlockChildren = getTotalBlockChildren(sorted[i]);
@@ -397,12 +408,15 @@ async function main() {
                     // filled vertical space so lets take it away
                     
                     var blockRatio = block.maxHeightRatio / block.maxWidthRatio;
+                    console.log("block ratio " + blockRatio);
                     var maxWidthRatio = canvasRatio / blockRatio;
+                    console.log("max width ratio " + maxWidthRatio);
                     var targetHeightRatio = block.maxHeightRatio - ((totalBlockChildren - 1)*(gapRelative/targetRatio));
+                    console.log("target height ratio " + targetHeightRatio);
                     var targetWidthRatio = maxWidthRatio - ((totalBlockChildren - 2) * (gapRelative/canvasRatio));
                     var scalingFactor = (targetWidthRatio / maxWidthRatio);
                     var scalingFactor = (targetHeightRatio / block.maxHeightRatio);
-                    blockWidth = maxWidthRatio * scalingFactor * targetWidth;
+                    blockWidth = maxWidthRatio * scalingFactor * canvasWidth;
                     
                     //console.log("scaling factor " + scalingFactor);
                     //console.log("gap relative " + gapRelative);

@@ -87,7 +87,7 @@ export const callback = async(windows) => {
     }
     const { exec } = await import('child_process');
     commandArray.forEach((command) => {
-        //console.log(command);
+        console.log(command);
         exec(command);
     });
 }
