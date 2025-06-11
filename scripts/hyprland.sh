@@ -55,4 +55,4 @@ adapter="hyprland"
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 cd $SCRIPT_DIR
 cd ../
-node packing.js --monitor "$monitorJson" --windows "$json" --adapter hyprland --gap 40 --marginVertical 200 --marginHorizontal 40 --waybarHeight 50 --activeWorkspace "$active_workspace" --logging false
+node packing.js --monitor "$monitorJson" --windows "$json" --adapter hyprland --gap 40 --marginVertical 15 --marginHorizontal 15 --waybarHeight 50 --activeWorkspace "$active_workspace" --logging false
