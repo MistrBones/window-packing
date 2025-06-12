@@ -16,7 +16,6 @@ async function main() {
       }
     }
     
-   
     loggingEnabled = parsedArgs?.logging ?? false;
     canvasWidth = 0;
     canvasHeight = 0;
@@ -349,34 +348,18 @@ async function main() {
             }
             else if (widthLeft != 0 && heightLeft != 0 && widthLeft < heightLeftConverted || widthLeft < 0) {
                 logger("\x1b[44m Setting target width to 100% of original width \x1b[0m");
-                // we will set width to equal to 1
-                
+                // we will set width to equal to 1      
                 var currentWidth = targetWidth * newSideRatio;
-                
-                
                 var currentHeight = currentWidth * targetRatio;
                 targetWidth = (originalTargetWidth);
                 var canvasScalingFactor = currentWidth / targetWidth;
                 if (currentWidth > targetWidth) {
                     canvasScalingFactor = currentWidth / targetWidth;
-                    //canvasScalingFactor = 1;
                 }
                 else {
                     canvasScalingFactor = ((gap/2) + targetWidth - marginHorizontal/2) / currentWidth;
-                }
-                
-                //var canvasScalingFactor = 1.25;
-                //var canvasScalingFactor = currentWidth / targetWidth;
-                //canvasScalingFactor = 1;
-                //canvasScalingFactor = 1;
-                
-                
-                                
-                
+                }       
                 targetHeight = currentHeight*canvasScalingFactor;
-                //targetHeight = 200;
-                //targetHeight = currentHeight;
-                
                 targetRatio = targetHeight/targetWidth;
                 xOffset = (marginHorizontal/2);
                 if (originalTargetHeight > targetHeight) {
@@ -393,8 +376,6 @@ async function main() {
                     yOffset -= marginVertical/2;
 
                 }   
-
-                
             }
             else {
                 logger("\x1b[44m height or width =1 \x1b[0m");
@@ -410,7 +391,6 @@ async function main() {
                 }
             }
 
-    
             // the xOffset and yOffset properties here will allow to track the cumulative offsets from previously placed blocks once we call the sizeAndPositionBlocks() function
             placed = {
                 xOffset: xOffset,
@@ -462,9 +442,6 @@ async function main() {
             var finalCanvasWidth = targetWidth - marginHorizontal - gapDifference + (2*gap);
             var finalCanvasHeight = targetHeight;
 
-
-
-
             // get original target ratio and current target ratio
             var currentTargetRatio = targetHeight/targetWidth;
             
@@ -509,51 +486,19 @@ async function main() {
             }
 
             var blockWidthTally = 0;
-            
-            
-            
             targetRatio = targetHeight / targetWidth;
-            
-            
-            
-            //placed.xOffset = 0;
-            //placed.yOffset = 0;
-            //yOffset = 0;
-
-            if (newSideRatio > heightRatioFilled) {
-                
-            }
-            else {
-                
-            }
-
-
             for (var i = 0; i < sorted.length; i++) {
                 var block = sorted[i];
                 
                 var totalBlockChildren = getTotalBlockChildren(sorted[i]);
                 var blockWidth = 1;
-                
-                
-                
-                
-                
-                
-                
-
                 if (newSideRatio > heightRatioFilled) {
                     // taking horizontal space
                     block = scaleBlockToCanvas(block, targetRatio);
-
-                    var scalingFactor = finalCanvasHeight / targetHeight;
-
-                    
+                    var scalingFactor = finalCanvasHeight / targetHeight;                   
                     block.maxWidthRatio = block.maxWidthRatio - ((totalBlockChildren -1) * (gapRelative*originalTargetRatio));
                     blockWidth = block.maxWidthRatio * finalCanvasWidth * canvasScalingFactor;
                     blockWidthTally += block.maxWidthRatio;
-                    
-                    
-
                 }
                 else {
                     // taking vertical space
@@ -565,34 +510,17 @@ async function main() {
                     }
                     else {
                         var scalingFactor = targetHeight / finalCanvasHeight;
-                    }
-                    
-
-                    
+                    }                                     
                     block.maxWidthRatio = block.maxWidthRatio - ((totalBlockChildren - 1) * (gapRelative*originalTargetRatio));
                     blockWidthTally += block.maxWidthRatio;
                     blockWidth = (block.maxWidthRatio * originalTargetWidth * canvasScalingFactor);
                     //blockWidth = 800;
                 }
-
                 
                 placed.yOffset = yOffset;
-                var blockWidthMinusGap = block.maxWidthRatio - gapRelative;
-                //var gapScalingFactor = newSideRatioMinusGap / newSideRatio;
-                //var blockWidth = block.maxWidthRatio * targetWidth;
-                //if (block.type == "block") {
-                //    var blockWidth = (block.maxWidthRatio * gapScalingFactor) * targetWidth;
-                //}
-                //else {
-                //    var blockWidth = (block.maxWidthRatio * gapScalingFactor) * targetWidth;
-                //}
-
                 placed = sizeAndPositionBlocks(block, blockWidth, placed);
-                
                 placed.xOffset = placed.xOffset + (gap*1) + (blockWidth);// + gap*2;
             }
-            
-    
             return placed;
         }
     }
