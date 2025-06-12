@@ -7,6 +7,7 @@ export const adapt = ( args ) => {
         monitors = JSON.parse(args.monitor);
     }
     catch (error) {
+        console.log(monitors);
         console.error("Required argument --monitors not seen");
         return;
     }
@@ -20,6 +21,7 @@ export const adapt = ( args ) => {
 
     try {
         var workspace = JSON.parse(args.activeWorkspace);
+        console.log("active workspace:" + workspace);
         //console.log(workspace);
     }
     catch (error) {
@@ -32,7 +34,7 @@ export const adapt = ( args ) => {
     let monitorId = undefined;
     for (var i = 0; i < monitors.length; i++) {
         var monitor = monitors[i][1];
-        if (monitor.id == workspace) {
+        if (monitor.activeWorkspace.id == workspace) {
             monitorId = monitor.id;
             monitorXOffset = monitor.x;
             monitorYOffset = monitor.y;

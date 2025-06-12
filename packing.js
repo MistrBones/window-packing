@@ -23,7 +23,7 @@ async function main() {
     gap = parsedArgs?.gap ?? 0;
     marginVertical = parsedArgs?.marginVertical*2 ?? 0;
     if (marginVertical/2 < gap) {
-        marginVertical = gap;
+        marginVertical = gap*2;
     }
     marginHorizontal = parsedArgs?.marginHorizontal*2 ?? 0;
     if (marginHorizontal/2 < gap) {
@@ -311,22 +311,30 @@ async function main() {
             
             var yOffset = (marginVertical / 2) + (verticalGapAbsolute / 2);
             var xOffset = (marginHorizontal / 2) + (gapAbsolute / 2);
-
-            if (widthLeft > heightLeftConverted) {
+            canvasScalingFactor = 1;
+            if (widthLeft != 0 && heightLeft != 0 && widthLeft > heightLeftConverted || heightLeft < 0) {
 
                 // we sill set height to equal originalTargetRatio
 
                 console.log("\x1b[44m setting height to originalTargetHeight \x1b[0m");
                 var currentWidth = targetWidth * newSideRatio;
                 var currentHeight = (currentWidth * targetRatio);
-                targetHeight = originalTargetHeight + (marginVertical / 2);
-                var canvasScalingFactor = targetHeight / currentHeight;
-                var canvasScalingFactor = currentHeight / targetHeight;
+                targetHeight = originalTargetHeight - (marginVertical);
+                
+                
+                if (currentHeight > targetHeight) {
+                    canvasScalingFactor = currentHeight / targetHeight;
+                }
+                else {
+                    canvasScalingFactor = currentHeight / targetHeight;
+                }
                 //canvasScalingFactor = canvasScalingFactor / targetRatio;
                 //canvasScalingFactor = 1;
                 targetWidth = currentWidth * canvasScalingFactor;
                 targetRatio = targetHeight/targetWidth;
-                xOffset = (marginHorizontal / 2);
+                xOffset = (originalTargetWidth - currentWidth) / 2;
+                xOffset += marginHorizontal;
+                xOffset = 0;
                 yOffset = (marginVertical / 2);
                  console.log("scaling factor:" + canvasScalingFactor);
                 console.log("Setting target width to: " + targetWidth);
@@ -335,8 +343,9 @@ async function main() {
                 console.log("target width: " + targetWidth);
                 console.log("current height: " + currentHeight);
                 console.log("target height: " + targetHeight);
+                console.log("y offset: " + yOffset);
             }
-            else {
+            else if (widthLeft != 0 && heightLeft != 0 && widthLeft < heightLeftConverted || widthLeft < 0) {
                 console.log("\x1b[44m Setting target width to 100% of original width \x1b[0m");
                 // we will set width to equal to 1
                 console.log("setting width to 1");
@@ -344,20 +353,59 @@ async function main() {
                 console.log("current width: " + currentWidth);
                 console.log("target width: " + targetWidth);
                 var currentHeight = currentWidth * targetRatio;
-                targetWidth = originalTargetWidth - (marginHorizontal/2);
-                var canvasScalingFactor = (targetWidth) / currentWidth;
+                targetWidth = (originalTargetWidth);
+                var canvasScalingFactor = currentWidth / targetWidth;
+                if (currentWidth > targetWidth) {
+                    canvasScalingFactor = currentWidth / targetWidth;
+                    //canvasScalingFactor = 1;
+                }
+                else {
+                    canvasScalingFactor = ((gap/2) + targetWidth - marginHorizontal/2) / currentWidth;
+                }
+                console.log("canvas scaling factor: " + canvasScalingFactor);
+                //var canvasScalingFactor = 1.25;
                 //var canvasScalingFactor = currentWidth / targetWidth;
                 //canvasScalingFactor = 1;
                 //canvasScalingFactor = 1;
                 console.log("scaling factor:" + canvasScalingFactor);
                 console.log("Setting target width to: " + targetWidth);
-                targetWidth = originalTargetWidth - (marginHorizontal/2);
+                                console.log("current height: " + currentHeight);
+                console.log("target height: " + targetHeight);
                 targetHeight = currentHeight*canvasScalingFactor;
+                //targetHeight = 200;
                 //targetHeight = currentHeight;
                 console.log("Setting target height to: " + targetHeight);
                 targetRatio = targetHeight/targetWidth;
-                xOffset = (marginHorizontal / 2);
-                yOffset = (marginVertical / 2);
+                xOffset = (marginHorizontal/2);
+                if (originalTargetHeight > targetHeight) {
+                    yOffset = originalTargetHeight - targetHeight;
+                    yOffset = yOffset/2;
+                    console.log(yOffset);
+                    yOffset = 0;
+                    yOffset = marginVertical/2;
+                }
+                else {
+                    yOffset = (targetHeight - originalTargetHeight)/2;
+                    //yOffset += marginVertical/2;
+                    yOffset -= (marginHorizontal*1*originalTargetRatio);
+                    yOffset -= marginVertical/2;
+
+                }   
+
+                console.log("y offset: " + yOffset);
+            }
+            else {
+                console.log("\x1b[44m height or width =1 \x1b[0m");
+                if (widthLeft == 0) {
+                    console.log("width left is 0");
+                    targetWidth = targetWidth - marginHorizontal;
+                }
+                if (heightLeft == 0) {
+                    console.log("height left is 0");
+                    targetHeight = originalTargetHeight - (marginVertical/4);
+                    yOffset = (marginVertical/2);
+                    //targetHeight = originalTargetHeight;
+                }
             }
 
     
@@ -499,7 +547,7 @@ async function main() {
 
                     console.log("new scaling factor used: " + scalingFactor);
                     block.maxWidthRatio = block.maxWidthRatio - ((totalBlockChildren -1) * (gapRelative*originalTargetRatio));
-                    blockWidth = block.maxWidthRatio * finalCanvasWidth * scalingFactor;
+                    blockWidth = block.maxWidthRatio * finalCanvasWidth * canvasScalingFactor;
                     blockWidthTally += block.maxWidthRatio;
                     console.log("block max height ratio: " + block.maxHeightRatio);
                     console.log("block raito: " + block.ratio);
@@ -633,6 +681,10 @@ async function main() {
         if (loggingEnabled) {
             console.log(message);
         }
+    }
+
+    function variableLogMessage(name, variable) {
+        return name + " is set to: " + variable;
     }
     
     // Begin main code
