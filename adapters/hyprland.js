@@ -7,25 +7,25 @@ export const adapt = ( args ) => {
         monitors = JSON.parse(args.monitor);
     }
     catch (error) {
-        console.log(monitors);
-        console.error("Required argument --monitors not seen");
+        
+        
         return;
     }
     try {
         windows = JSON.parse(args.windows);
     }
     catch (error) {
-        console.error("Required argument --windows not seen.");
+        
         return;
     }
 
     try {
         var workspace = JSON.parse(args.activeWorkspace);
-        console.log("active workspace:" + workspace);
-        //console.log(workspace);
+        
+        
     }
     catch (error) {
-        console.error("Required argument --activeWorkspace not seen.");
+        
         return;
     }
 
@@ -45,7 +45,7 @@ export const adapt = ( args ) => {
             break;
         }
     }
-    //console.log(typeof(monitorId));
+    
     if (typeof(monitorId) === 'undefined') {
       throw new Error("No active monitor found");
     }
@@ -87,7 +87,7 @@ export const callback = async(windows) => {
     }
     const { exec } = await import('child_process');
     commandArray.forEach((command) => {
-        //console.log(command);
+        
         exec(command);
     });
 }

@@ -46,7 +46,7 @@ async function main() {
     // Using an adapter here keeps the use cases for this algorithm flexible allowing us to implement other window managers or, for example, masonry style layouts for webpages
     async function importAdapter(adapterId) {
         if (!adapterId) {
-            console.error("An adapter must be specified");
+            
             return;
         }
         else {
@@ -54,8 +54,10 @@ async function main() {
                 var adapter = await import("./adapters/" + adapterId + ".js");
                 return adapter;
             } catch (error) {
-                console.log("Error importing adapter:");
-                console.error(error);
+                console.log(
+                    "Error importing adapter:"
+                );
+                
                 throw new Error("No adapter could be imported which is required for script execution");
             }
         }
@@ -161,7 +163,7 @@ async function main() {
             // we will fill the Y dimension before the X dimension
             var targetHeightRatio = originalTargetRatio;
             var totalHeightRatio = blocksArray[0][1].maxHeightRatio;
-            //console.log("Total height ratio in getScalingFactorForBlocks: " + totalHeightRatio);
+            
             return targetHeightRatio / totalHeightRatio;
         }
     }
@@ -211,7 +213,7 @@ async function main() {
         } else {
 
             if (length == 1) {
-                console.log("got length 1");
+                
             }
 
             // Blocks would not overflow canvas if placed now
@@ -230,12 +232,12 @@ async function main() {
                 if (blockArea > largestSeenArea) {
                     // We will save the currently calculated blocks incase this solution is better than the later one
                     logger("Saving better potential solution");
-                    console.log("better solution has maxHeightRatio of " + targetRatio);
-                    console.log("type for blocks variable: " + typeof(blocks));
+                    
+                    
                     previousSolution = structuredClone(blocks);
-                    //console.log("saved solution: ");
-                    console.log(previousSolution);
-                    console.log("are they the same object? " + (previousSolution == blocks));
+                    
+                    
+                    
                     largestSeenWidth = targetWidth;
                     largestSeenHeight = targetHeight;
                     largestSeenArea = blockArea;
@@ -278,8 +280,8 @@ async function main() {
                 logger("Original blocks area: " + largestSeenArea);
                 if (newBlocksArea < largestSeenArea) {
                     logger("Original solution is better, reverting blocks state");
-                    //console.log(previousSolution);
-                    //console.log("setting new best solution");
+                    
+                    
                     blocks = { ...previousSolution };
                     canvasWidth = largestSeenWidth;
                     canvasHeight = largestSeenHeight;
@@ -298,15 +300,15 @@ async function main() {
             var heightLeftConverted = heightLeft / targetRatio;
 
 
-            console.log("height left as ratio: " + heightLeft);
-            console.log("height left converted as ratio: " + heightLeftConverted);
-            console.log("width left: " + widthLeft);
+            
+            
+            
             var gapAbsolute = widthLeft * originalTargetWidth;
             var verticalGap = originalTargetRatio - targetRatio;
             var verticalGap = originalTargetHeight - targetHeight;
-            console.log("vertical gap: " + verticalGap);
+            
             //var horizontalRatio = 
-            //console.log("horizontalRatio: " + horizontalRatio);
+            
             var verticalGapAbsolute = verticalGap;
             
             var yOffset = (marginVertical / 2) + (verticalGapAbsolute / 2);
@@ -316,7 +318,7 @@ async function main() {
 
                 // we sill set height to equal originalTargetRatio
 
-                console.log("\x1b[44m setting height to originalTargetHeight \x1b[0m");
+                logger("\x1b[44m setting height to originalTargetHeight \x1b[0m");
                 var currentWidth = targetWidth * newSideRatio;
                 var currentHeight = (currentWidth * targetRatio);
                 targetHeight = originalTargetHeight - (marginVertical);
@@ -336,22 +338,22 @@ async function main() {
                 xOffset += marginHorizontal;
                 xOffset = 0;
                 yOffset = (marginVertical / 2);
-                 console.log("scaling factor:" + canvasScalingFactor);
-                console.log("Setting target width to: " + targetWidth);
-                console.log("Setting target height to: " + targetHeight);
-                console.log("current width: " + currentWidth);
-                console.log("target width: " + targetWidth);
-                console.log("current height: " + currentHeight);
-                console.log("target height: " + targetHeight);
-                console.log("y offset: " + yOffset);
+                 
+                
+                
+                
+                
+                
+                
+                
             }
             else if (widthLeft != 0 && heightLeft != 0 && widthLeft < heightLeftConverted || widthLeft < 0) {
-                console.log("\x1b[44m Setting target width to 100% of original width \x1b[0m");
+                logger("\x1b[44m Setting target width to 100% of original width \x1b[0m");
                 // we will set width to equal to 1
-                console.log("setting width to 1");
+                
                 var currentWidth = targetWidth * newSideRatio;
-                console.log("current width: " + currentWidth);
-                console.log("target width: " + targetWidth);
+                
+                
                 var currentHeight = currentWidth * targetRatio;
                 targetWidth = (originalTargetWidth);
                 var canvasScalingFactor = currentWidth / targetWidth;
@@ -362,25 +364,25 @@ async function main() {
                 else {
                     canvasScalingFactor = ((gap/2) + targetWidth - marginHorizontal/2) / currentWidth;
                 }
-                console.log("canvas scaling factor: " + canvasScalingFactor);
+                
                 //var canvasScalingFactor = 1.25;
                 //var canvasScalingFactor = currentWidth / targetWidth;
                 //canvasScalingFactor = 1;
                 //canvasScalingFactor = 1;
-                console.log("scaling factor:" + canvasScalingFactor);
-                console.log("Setting target width to: " + targetWidth);
-                                console.log("current height: " + currentHeight);
-                console.log("target height: " + targetHeight);
+                
+                
+                                
+                
                 targetHeight = currentHeight*canvasScalingFactor;
                 //targetHeight = 200;
                 //targetHeight = currentHeight;
-                console.log("Setting target height to: " + targetHeight);
+                
                 targetRatio = targetHeight/targetWidth;
                 xOffset = (marginHorizontal/2);
                 if (originalTargetHeight > targetHeight) {
                     yOffset = originalTargetHeight - targetHeight;
                     yOffset = yOffset/2;
-                    console.log(yOffset);
+                    
                     yOffset = 0;
                     yOffset = marginVertical/2;
                 }
@@ -392,16 +394,16 @@ async function main() {
 
                 }   
 
-                console.log("y offset: " + yOffset);
+                
             }
             else {
-                console.log("\x1b[44m height or width =1 \x1b[0m");
+                logger("\x1b[44m height or width =1 \x1b[0m");
                 if (widthLeft == 0) {
-                    console.log("width left is 0");
+                    
                     targetWidth = targetWidth - marginHorizontal;
                 }
                 if (heightLeft == 0) {
-                    console.log("height left is 0");
+                    
                     targetHeight = originalTargetHeight - (marginVertical/4);
                     yOffset = (marginVertical/2);
                     //targetHeight = originalTargetHeight;
@@ -446,7 +448,7 @@ async function main() {
             var totalBlocks = sorted.length;
             var gapRelative = (gap / canvasWidth) * originalTargetRatio;
             var gapDifference = gap * (totalBlocks + 1);
-            console.log("margin horizontal is " + marginHorizontal);
+            
 
             // Calculate placed image X and Y positions
             var finalCanvasHeight = canvasHeight - marginVertical - (0*gap);
@@ -465,25 +467,25 @@ async function main() {
 
             // get original target ratio and current target ratio
             var currentTargetRatio = targetHeight/targetWidth;
-            console.log("target ratio is " + targetRatio + ', original target ratio is ' + originalTargetRatio);
+            
             if (targetRatio < originalTargetRatio) {
                 // run out of height? first
-                console.log("running out of height first");
+                
                 finalCanvasHeight = originalTargetHeight;
                 finalCanvasWidth = (finalCanvasHeight / (currentTargetRatio)) + (1*gap);
 
             }
             else {
                 //runs out of the other first
-                console.log("running out of width first");
+                
                 finalCanvasWidth = originalTargetWidth;
                 finalCanvasHeight = finalCanvasWidth * currentTargetRatio;
-                console.log("final canvas width set to " + finalCanvasWidth);
+                
             }
 
             var finalCanvasRatio = finalCanvasHeight/finalCanvasWidth;
             var heightRatioFilled = getBlockHeight(sorted) / finalCanvasRatio;
-            console.log("block maxHeightRatio ex: " + sorted[0].maxHeightRatio);
+            
 
             function scaleBlockToCanvas(block, canvasRatio) {
                 var blockHeight = block.maxHeightRatio;
@@ -507,36 +509,36 @@ async function main() {
             }
 
             var blockWidthTally = 0;
-            console.log("final canvas ratio: " + finalCanvasRatio);
-            console.log("target width: " + targetWidth + "px");
-            console.log("target height: " + targetHeight + "px");
+            
+            
+            
             targetRatio = targetHeight / targetWidth;
-            console.log("target ratio: " + targetRatio);
-            console.log("current x offset: " + xOffset);
-            console.log("current y offset:  " + yOffset);
+            
+            
+            
             //placed.xOffset = 0;
             //placed.yOffset = 0;
             //yOffset = 0;
 
             if (newSideRatio > heightRatioFilled) {
-                console.log("\x1b[32m Taking horizontal space \x1b[0m");
+                
             }
             else {
-                console.log("\x1b[44m Taking vertical space \x1b[0m");
+                
             }
 
 
             for (var i = 0; i < sorted.length; i++) {
                 var block = sorted[i];
-                console.warn("\x1b[33mcalculating for block: \x1b[0m" + block.index);
+                
                 var totalBlockChildren = getTotalBlockChildren(sorted[i]);
                 var blockWidth = 1;
-                console.log("used height ratio: " + heightRatioFilled);
-                console.log("new side ratio: " + newSideRatio);
-                console.log("target height: " + targetHeight + "px");
-                console.log("canvas height: " + finalCanvasHeight + "px");
-                console.log("target width: " + targetWidth);
-                console.log("canvas width: " + finalCanvasWidth);
+                
+                
+                
+                
+                
+                
                 
 
                 if (newSideRatio > heightRatioFilled) {
@@ -545,17 +547,17 @@ async function main() {
 
                     var scalingFactor = finalCanvasHeight / targetHeight;
 
-                    console.log("new scaling factor used: " + scalingFactor);
+                    
                     block.maxWidthRatio = block.maxWidthRatio - ((totalBlockChildren -1) * (gapRelative*originalTargetRatio));
                     blockWidth = block.maxWidthRatio * finalCanvasWidth * canvasScalingFactor;
                     blockWidthTally += block.maxWidthRatio;
-                    console.log("block max height ratio: " + block.maxHeightRatio);
-                    console.log("block raito: " + block.ratio);
+                    
+                    
 
                 }
                 else {
                     // taking vertical space
-                    console.log("taking vertical space");
+                    
                     block = scaleBlockToCanvas(block, targetRatio);
                     
                     if (finalCanvasHeight > targetHeight) {
@@ -566,14 +568,14 @@ async function main() {
                     }
                     
 
-                    console.log("new scaling factor used: " + scalingFactor);
+                    
                     block.maxWidthRatio = block.maxWidthRatio - ((totalBlockChildren - 1) * (gapRelative*originalTargetRatio));
                     blockWidthTally += block.maxWidthRatio;
                     blockWidth = (block.maxWidthRatio * originalTargetWidth * canvasScalingFactor);
                     //blockWidth = 800;
                 }
 
-                //console.log("block width: " + blockWidth);
+                
                 placed.yOffset = yOffset;
                 var blockWidthMinusGap = block.maxWidthRatio - gapRelative;
                 //var gapScalingFactor = newSideRatioMinusGap / newSideRatio;
@@ -586,10 +588,10 @@ async function main() {
                 //}
 
                 placed = sizeAndPositionBlocks(block, blockWidth, placed);
-                //console.log(gap);
+                
                 placed.xOffset = placed.xOffset + (gap*1) + (blockWidth);// + gap*2;
             }
-            console.log("block width talley: " + blockWidthTally);
+            
     
             return placed;
         }
@@ -679,7 +681,9 @@ async function main() {
     
     function logger(message, color="white") {
         if (loggingEnabled) {
-            console.log(message);
+            console.log(
+                message
+            );
         }
     }
 
@@ -729,6 +733,8 @@ async function main() {
 try {
     main();
 } catch ( error ) {
-    console.log("An error occurred and the script could not be executed");
-    console.error(error);
+    console.log(
+        "An error occurred and the script could not be executed"
+    );
+    
 }
