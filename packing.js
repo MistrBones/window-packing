@@ -397,9 +397,7 @@ async function main() {
             var heightLeft = verticalGap;
             logger("width left; " + widthLeft);
             logger("height left; " + heightLeft);
-            xOffset = (widthLeft * targetRatio) + (marginHorizontal/2);
-            yOffset = 0;
-            yOffset += marginVertical/2;
+            xOffset = (widthLeft * targetWidth * 0.5) + (marginHorizontal/2);
 
 
             // the xOffset and yOffset properties here will allow to track the cumulative offsets from previously placed blocks once we call the sizeAndPositionBlocks() function
@@ -497,6 +495,7 @@ async function main() {
             }
 
             var blockWidthTally = 0;
+            var defaultYOffset = false;
             targetRatio = targetHeight / targetWidth;
             for (var i = 0; i < sorted.length; i++) {
                 var block = sorted[i];
@@ -529,8 +528,15 @@ async function main() {
                     blockWidth = (block.maxWidthRatio * originalTargetWidth * scalingFactor);
 
                 }
-                
-                placed.yOffset = yOffset;
+                if (defaultYOffset === false) {
+                    var totalHeight = originalTargetHeight;
+                    var currentHeight = blockWidth * block.ratio;
+                    var verticalGap = totalHeight - currentHeight;
+                    defaultYOffset = (verticalGap/2) + (marginVertical/2);
+                    logger("default y offset: " + defaultYOffset);
+                }
+
+                placed.yOffset = defaultYOffset;
                 placed = sizeAndPositionBlocks(block, blockWidth, placed);
                 placed.xOffset = placed.xOffset + (gap*1) + (blockWidth);// + gap*2;
             }

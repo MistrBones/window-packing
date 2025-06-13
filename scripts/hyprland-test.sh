@@ -56,4 +56,4 @@ SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd $SCRIPT_DIR
 cd ../
 
-node packing.js --monitor "$monitorJson" --windows "$json" --adapter hyprland --gap 20 --marginVertical 0 --marginHorizontal 0 --waybarHeight 50 --activeWorkspace "$active_workspace" --logging false
+node packing.js --monitor "$monitorJson" --windows "$json" --adapter hyprland --gap 20 --marginVertical 0 --marginHorizontal 0 --waybarHeight 46 --activeWorkspace "$active_workspace" --logging false
