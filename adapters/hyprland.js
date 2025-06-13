@@ -53,7 +53,6 @@ export const adapt = ( args ) => {
             targetWindows.push(window);
         }
     }
-    console.log(targetWindows);
     return {
         windows: targetWindows, 
         xOffset: monitorXOffset, 
