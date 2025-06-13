@@ -10,17 +10,14 @@ async function main(config={}) {
         if (isNodeEnvironment()) {
             // load arguments from process
             const userArgs = process.argv.splice(2);
-            console.log(userArgs);
             var parsedArgs = {};
             for (var i = 0; i < userArgs.length; i++) {
                 var argument = userArgs[i];
                 if (argument.startsWith("--")) {
                     // named argument
                     i++;
-                    console.log(argument);
                     parsedArgs[argument.substring(2)] = userArgs[i];
                 }
-                
             }
             return parsedArgs;
             
@@ -28,15 +25,10 @@ async function main(config={}) {
             // load arguments from config
             return config;
         }
-
     }
 
     var parsedArgs = getArguments(config);
-    console.log(parsedArgs);
-
-
-    
-    var loggingEnabled = parsedArgs?.logging ?? true;
+    var loggingEnabled = parsedArgs?.logging ?? false;
     var canvasWidth = 0;
     var canvasHeight = 0;
     var gap = parsedArgs?.gap ?? 0;
@@ -86,9 +78,7 @@ async function main(config={}) {
                 var adapter = await import(adapterLocation);
                 return adapter;
             } catch (error) {
-                console.log(
-                    "Error importing adapter:"
-                );
+                logger("Error importing adapter:", "white", "red");
                 throw new Error("No adapter could be imported which is required for script execution");
             }
         }
@@ -633,7 +623,7 @@ if (isNodeEnvironment()) {
     try {
         main();
     } catch ( error ) {
-        console.log(
+        console.error(
             "An error occurred and the script could not be executed"
         );
         
