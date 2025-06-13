@@ -10,16 +10,20 @@ async function main(config={}) {
         if (isNodeEnvironment()) {
             // load arguments from process
             const userArgs = process.argv.splice(2);
+            console.log(userArgs);
             var parsedArgs = {};
             for (var i = 0; i < userArgs.length; i++) {
                 var argument = userArgs[i];
                 if (argument.startsWith("--")) {
                     // named argument
                     i++;
+                    console.log(argument);
                     parsedArgs[argument.substring(2)] = userArgs[i];
-                    return parsedArgs;
                 }
+                
             }
+            return parsedArgs;
+            
         } else {
             // load arguments from config
             return config;
@@ -28,9 +32,11 @@ async function main(config={}) {
     }
 
     var parsedArgs = getArguments(config);
+    console.log(parsedArgs);
+
 
     
-    loggingEnabled = parsedArgs?.logging ?? false;
+    loggingEnabled = parsedArgs?.logging ?? true;
     canvasWidth = 0;
     canvasHeight = 0;
     gap = parsedArgs?.gap ?? 0;
@@ -43,6 +49,8 @@ async function main(config={}) {
         marginHorizontal = gap*2;
     }
     images = [];
+
+    
     
     var adapterId = parsedArgs?.adapter;
     var adapter = await importAdapter(adapterId);
@@ -63,12 +71,14 @@ async function main(config={}) {
         else {
             if (isNodeEnvironment()) {
                 // import local adapter
+                logger("In node environment", "white", "green");
                 var adapterLocation = "./adapters/" + adapterId + ".js";
             } else {
                 // import adapter from url
+                logger("Not in node environment", "white", "green");
                 var adapterLocation = adapterId;
             }
-            
+
             try {
                 var adapter = await import(adapterLocation);
                 return adapter;
@@ -627,3 +637,5 @@ if (isNodeEnvironment()) {
 } else {
     // file probably being included in web browser
 }
+
+//export { main as WindowPacking };
