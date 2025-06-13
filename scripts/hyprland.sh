@@ -1,4 +1,21 @@
 #!/bin/bash
+get_named_arg() {
+  local name="$1"
+  local fallback="$2"
+  shift 2
+
+  while [[ $# -gt 0 ]]; do
+    if [[ "$1" == "--$name" ]]; then
+      echo "$2"
+      return
+    fi
+    shift
+  done
+
+  echo "$fallback"
+}
+
+
 active_workspace=$(hyprctl activeworkspace -j | jq '.id' )
 
 mapfile -t monitors_lines < <(hyprctl monitors)
@@ -55,4 +72,4 @@ adapter="hyprland"
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 cd $SCRIPT_DIR
 cd ../
-node packing.js --monitor "$monitorJson" --windows "$json" --adapter hyprland --gap 20 --marginVertical 0 --marginHorizontal 20 --waybarHeight 50 --activeWorkspace "$active_workspace" --logging false
+node packing.js --monitor "$monitorJson" --windows "$json" --adapter hyprland --gap $(get_named_arg "gap" "20" "$@") --marginVertical $(get_named_arg "marginVertical" "0" "$@") --marginHorizontal $(get_named_arg "marginHorizontal" "20" "$@") --waybarHeight $(get_named_arg "waybarHeight" "50" "$@") --activeWorkspace $(get_named_arg "active_workspace" "$active_workspace" "$@") --logging $(get_named_arg "logging" "false" "$@")

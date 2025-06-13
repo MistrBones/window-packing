@@ -429,7 +429,7 @@ async function main() {
                     var totalHeight = originalTargetHeight;
                     var currentHeight = blockWidth * block.ratio;
                     var verticalGap = totalHeight - currentHeight;
-                    defaultYOffset = (verticalGap/2) + (marginVertical/2);
+                    defaultYOffset = (verticalGap/2) + (0*marginVertical/2);
                     logger("default y offset: " + defaultYOffset);
                 }
 
