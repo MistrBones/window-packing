@@ -7,25 +7,19 @@ export const adapt = ( args ) => {
         monitors = JSON.parse(args.monitor);
     }
     catch (error) {
-        
-        
         return;
     }
     try {
         windows = JSON.parse(args.windows);
     }
     catch (error) {
-        
         return;
     }
 
     try {
         var workspace = JSON.parse(args.activeWorkspace);
-        
-        
     }
     catch (error) {
-        
         return;
     }
 
@@ -59,6 +53,7 @@ export const adapt = ( args ) => {
             targetWindows.push(window);
         }
     }
+    console.log(targetWindows);
     return {
         windows: targetWindows, 
         xOffset: monitorXOffset, 

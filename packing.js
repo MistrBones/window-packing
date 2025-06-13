@@ -38,7 +38,6 @@ async function main() {
     images = outputs.windows;
     canvasWidth = outputs.canvasWidth;
     canvasHeight = outputs.canvasHeight;
-    monitorYOffset = outputs.yOffset;
     adapterCallback = adapter.callback;
     
     // The adapter is responsible for taking the output of this algorithm (an array with a list of final width/height and x/y offsets) and doing something useful with it. For example, this project was initially created with managing windows in Hyprland in mind so we have a hyprland adapter that runs the necessary hyprctl commands to resize/move windows.
