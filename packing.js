@@ -4,17 +4,31 @@
 // we always represent the width as 1 so we re-calculate that ratio
 // so 16:9 -> 1:0.5625
 
-async function main() {
-    const userArgs = process.argv.splice(2);
-    var parsedArgs = {};
-    for (var i = 0; i < userArgs.length; i++) {
-      var argument = userArgs[i];
-      if (argument.startsWith("--")) {
-        // named argument
-        i++;
-        parsedArgs[argument.substring(2)] = userArgs[i];
-      }
+async function main(config={}) {
+
+    function getArguments(config) {
+        if (isNodeEnvironment()) {
+            // load arguments from process
+            const userArgs = process.argv.splice(2);
+            var parsedArgs = {};
+            for (var i = 0; i < userArgs.length; i++) {
+                var argument = userArgs[i];
+                if (argument.startsWith("--")) {
+                    // named argument
+                    i++;
+                    parsedArgs[argument.substring(2)] = userArgs[i];
+                    return parsedArgs;
+                }
+            }
+        } else {
+            // load arguments from config
+            return config;
+        }
+
     }
+
+    var parsedArgs = getArguments(config);
+
     
     loggingEnabled = parsedArgs?.logging ?? false;
     canvasWidth = 0;
@@ -44,18 +58,24 @@ async function main() {
     // Using an adapter here keeps the use cases for this algorithm flexible allowing us to implement other window managers or, for example, masonry style layouts for webpages
     async function importAdapter(adapterId) {
         if (!adapterId) {
-            
             return;
         }
         else {
+            if (isNodeEnvironment()) {
+                // import local adapter
+                var adapterLocation = "./adapters/" + adapterId + ".js";
+            } else {
+                // import adapter from url
+                var adapterLocation = adapterId;
+            }
+            
             try {
-                var adapter = await import("./adapters/" + adapterId + ".js");
+                var adapter = await import(adapterLocation);
                 return adapter;
             } catch (error) {
                 console.log(
                     "Error importing adapter:"
                 );
-                
                 throw new Error("No adapter could be imported which is required for script execution");
             }
         }
@@ -591,11 +611,19 @@ async function main() {
     return;
 }
 
-try {
-    main();
-} catch ( error ) {
-    console.log(
-        "An error occurred and the script could not be executed"
-    );
-    
+function isNodeEnvironment() {
+  return typeof process !== 'undefined' && process.versions && process.versions.node;
+}
+
+if (isNodeEnvironment()) {
+    try {
+        main();
+    } catch ( error ) {
+        console.log(
+            "An error occurred and the script could not be executed"
+        );
+        
+    }
+} else {
+    // file probably being included in web browser
 }
