@@ -153,13 +153,16 @@ async function main() {
         var horizontalGapAdjusted = gapAbsolute / (1 - marginRatio);
         var verticalGapAdjusted = verticalGapAbsolute / (originalTargetRatio - verticalMarginRatio);
 
-    
+        logger("horizontal gap adjusted: " + horizontalGapAdjusted);
+        logger("vertical gap adjusted: " + verticalGapAdjusted);
         if (horizontalGapAdjusted < verticalGapAdjusted) {
             // we will fill the X dimension before the Y dimension
+            logger("Filling X dimension first in block scaling factor function", "white", "black");
             var targetWidthRatio = 1;
             return targetWidthRatio / totalSideRatio;
         } else {
             // we will fill the Y dimension before the X dimension
+            logger("Filling Y dimension first in block scaling factor function", "white", "black");
             var targetHeightRatio = originalTargetRatio;
             var totalHeightRatio = blocksArray[0][1].maxHeightRatio;
             
@@ -296,39 +299,34 @@ async function main() {
             var newSideRatio = getTotalSideRatio(blocksArray);
             var widthLeft = 1 - newSideRatio;
             var heightLeft = originalTargetRatio - targetRatio;
-            var heightLeftConverted = heightLeft / targetRatio;
-
-
-            
-            
-            
+            var heightLeftConverted = heightLeft / originalTargetRatio;
             var gapAbsolute = widthLeft * originalTargetWidth;
             var verticalGap = originalTargetRatio - targetRatio;
             var verticalGap = originalTargetHeight - targetHeight;
-            
-            //var horizontalRatio = 
-            
-            var verticalGapAbsolute = verticalGap;
-            
+            var verticalGapAbsolute = verticalGap;           
             var yOffset = (marginVertical / 2) + (verticalGapAbsolute / 2);
             var xOffset = (marginHorizontal / 2) + (gapAbsolute / 2);
             canvasScalingFactor = 1;
+            var currentWidth = targetWidth * newSideRatio;
+            var currentHeight = (currentWidth * targetRatio);
+
+            /*
             if (widthLeft != 0 && heightLeft != 0 && widthLeft > heightLeftConverted || heightLeft < 0) {
 
                 // we sill set height to equal originalTargetRatio
 
-                logger("\x1b[44m setting height to originalTargetHeight \x1b[0m");
-                var currentWidth = targetWidth * newSideRatio;
-                var currentHeight = (currentWidth * targetRatio);
-                targetHeight = originalTargetHeight - (marginVertical);
-                
-                
+                logger("Setting height to originalTargetHeight", "white", "blue");                
                 if (currentHeight > targetHeight) {
+                    logger("Greater than target height");
                     canvasScalingFactor = currentHeight / targetHeight;
                 }
                 else {
-                    canvasScalingFactor = currentHeight / targetHeight;
+                    logger("Less than target height");
+                    canvasScalingFactor = (targetHeight - marginVertical) / currentHeight;
                 }
+                logger("Scaling factor: " + canvasScalingFactor, "white", "green");
+
+                canvasScalingFactor = 1.237;
                 //canvasScalingFactor = canvasScalingFactor / targetRatio;
                 //canvasScalingFactor = 1;
                 targetWidth = currentWidth * canvasScalingFactor;
@@ -337,29 +335,27 @@ async function main() {
                 xOffset += marginHorizontal;
                 xOffset = 0;
                 yOffset = (marginVertical / 2);
-                 
-                
-                
-                
-                
-                
-                
-                
             }
             else if (widthLeft != 0 && heightLeft != 0 && widthLeft < heightLeftConverted || widthLeft < 0) {
-                logger("\x1b[44m Setting target width to 100% of original width \x1b[0m");
+                logger("Setting target width to 100% of original width", "white", "blue");
                 // we will set width to equal to 1      
                 var currentWidth = targetWidth * newSideRatio;
                 var currentHeight = currentWidth * targetRatio;
-                targetWidth = (originalTargetWidth);
+                //targetWidth = (originalTargetWidth);
                 var canvasScalingFactor = currentWidth / targetWidth;
                 if (currentWidth > targetWidth) {
+                    logger("current width larger than target", "white", "blue");
                     canvasScalingFactor = currentWidth / targetWidth;
                 }
                 else {
-                    canvasScalingFactor = ((gap/2) + targetWidth - marginHorizontal/2) / currentWidth;
+                    logger("current width smaller than target", "white", "blue");
+                    canvasScalingFactor = (targetWidth - marginHorizontal - (2*gap*(blocksArray.length))) / currentWidth;
+                    canvasScalingFactor = (targetWidth - (gap*(blocksArray.length - 1))) / targetWidth;
+                    canvasScalingFactor = 1 - (0.5*gapRelative);
+                    //canvasScalingFactor = 0.87;
                 }       
                 targetHeight = currentHeight*canvasScalingFactor;
+                targetWidth = targetHeight/targetRatio;
                 targetRatio = targetHeight/targetWidth;
                 xOffset = (marginHorizontal/2);
                 if (originalTargetHeight > targetHeight) {
@@ -390,6 +386,21 @@ async function main() {
                     //targetHeight = originalTargetHeight;
                 }
             }
+            */
+            canvasScalingFactor = 1;
+            scalingFactor = getScalingFactorForBlocks(blocks);
+            logger("Block scaling factor: " + scalingFactor, "white", "green");
+            logger("Canvas scaling factor: " + canvasScalingFactor, "white", "green");
+            logger("New side ratio: " + newSideRatio, "white", "green");
+            var widthLeft = 1-(newSideRatio * scalingFactor);
+            var verticalGap = originalTargetHeight - (currentHeight*(scalingFactor*targetRatio));
+            var heightLeft = verticalGap;
+            logger("width left; " + widthLeft);
+            logger("height left; " + heightLeft);
+            xOffset = (widthLeft * targetRatio) + (marginHorizontal/2);
+            yOffset = 0;
+            yOffset += marginVertical/2;
+
 
             // the xOffset and yOffset properties here will allow to track the cumulative offsets from previously placed blocks once we call the sizeAndPositionBlocks() function
             placed = {
@@ -422,7 +433,7 @@ async function main() {
             // Gaussian = widest rows in center
             // Or we can skip all sorting and add blocks in whatever order they come in
             var sorted = gaussianArray;
-            shuffle(sorted);
+            //shuffle(sorted);
 
 
             var totalBlocks = sorted.length;
@@ -492,29 +503,31 @@ async function main() {
                 
                 var totalBlockChildren = getTotalBlockChildren(sorted[i]);
                 var blockWidth = 1;
-                if (newSideRatio > heightRatioFilled) {
+                logger("Width ratio filled: " + newSideRatio);
+                logger("Height ratio filled: " + heightRatioFilled);
+                if (newSideRatio > (1- heightLeftConverted)) {
                     // taking horizontal space
-                    block = scaleBlockToCanvas(block, targetRatio);
-                    var scalingFactor = finalCanvasHeight / targetHeight;                   
-                    block.maxWidthRatio = block.maxWidthRatio - ((totalBlockChildren -1) * (gapRelative*originalTargetRatio));
-                    blockWidth = block.maxWidthRatio * finalCanvasWidth * canvasScalingFactor;
+                    logger("Taking horizontal space for gap resizing", "white", "red");
+                    //block = scaleBlockToCanvas(block, targetRatio);               
+                    block.maxWidthRatio = block.maxWidthRatio - ((1.25) * (gapRelative));
+                    blockWidth = block.maxWidthRatio * targetWidth * scalingFactor;
                     blockWidthTally += block.maxWidthRatio;
                 }
                 else {
                     // taking vertical space
-                    
-                    block = scaleBlockToCanvas(block, targetRatio);
-                    
-                    if (finalCanvasHeight > targetHeight) {
-                        var scalingFactor = finalCanvasHeight / targetHeight;
-                    }
-                    else {
-                        var scalingFactor = targetHeight / finalCanvasHeight;
-                    }                                     
-                    block.maxWidthRatio = block.maxWidthRatio - ((totalBlockChildren - 1) * (gapRelative*originalTargetRatio));
+                    logger("Taking vertical space for gap resizing", "white", "red");
+                    //block = scaleBlockToCanvas(block, targetRatio);
+                    //block.maxWidthRatio = block.maxWidthRatio - ((1) * (gapRelative*originalTargetRatio));
+                    logger("total block children" + totalBlockChildren);
+                    var numGaps = totalBlockChildren;
+                    var gapSize = (numGaps  -1)*gap;
+                    logger("Gap size: " + gapSize);
+                    var gapSizeRelative = (gapSize/originalTargetWidth);
+                    logger("Gap size relative: " + gapSizeRelative);
+                    block.maxWidthRatio = block.maxWidthRatio - (gapSizeRelative/block.ratio);
                     blockWidthTally += block.maxWidthRatio;
-                    blockWidth = (block.maxWidthRatio * originalTargetWidth * canvasScalingFactor);
-                    //blockWidth = 800;
+                    blockWidth = (block.maxWidthRatio * originalTargetWidth * scalingFactor);
+
                 }
                 
                 placed.yOffset = yOffset;
@@ -607,16 +620,33 @@ async function main() {
     
     }
     
-    function logger(message, color="white") {
+    function logger(message, fg="white", bg="transparent") {
         if (loggingEnabled) {
             console.log(
-                message
+                getColorANSI(fg, "fg") + getColorANSI(bg, "bg") + message + " \x1b[0m"
             );
         }
     }
 
-    function variableLogMessage(name, variable) {
-        return name + " is set to: " + variable;
+    function getColorANSI(color, plane="fg") {
+        if (color == "transparent") {
+            return "\x1b[0m ";
+        }
+        var colors = {
+            black: 30,
+            red: 31,
+            green: 32,
+            yellow: 33,
+            blue: 34,
+            magenta: 35,
+            cyan: 36,
+            white: 37,
+        };
+        var code = colors[color];
+        if (plane == "bg") {
+            code += 10;
+        }
+        return "\x1b[" + code + "m ";
     }
     
     // Begin main code
