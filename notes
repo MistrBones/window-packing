@@ -40,18 +40,7 @@ In other cases, you might want to let your advanced users load their plugin into
 If your software is a complex thing, make it accept some configuration files (in addition or replacement of program arguments) and probably have some way to test (or just parse) these configuration files without running all the code. For example, a mail transfer agent (like Exim or Postfix) is quite complex, and it is useful to be able to "half-dry" run it (e.g. observing how it is handling some given email address without actually sending an email).
 
 // Current problems:
-// always results in square (less than optimally packed) outputs
-// is this a real problem its kind of aesthetically nice for what we want
-// gap support is broken because my original implementation was dumb (subtracting gap from x and y block size, works kind of but its not right because it doesnt respect aspect ratios. better to calculate a scaling factor to apply at placement time?)
-
-
-
-
-
-// broken:
-
-
-
+subtle sizing issues at final placing. maybe due to how we are applying scaling factors when accounting for gaps??
 
 // fixed:
 // doesnt make perfect use of horizontal space since it always fills the entire vertical space
@@ -65,28 +54,15 @@ If your software is a complex thing, make it accept some configuration files (in
 // convert that scaling factor into an absolute value
 // subtract that absolute value from the canvasHeight
 // return block placement
-
-// settings gaps seems to break centering on canvas
-
-// todo: sometimes when resizing blocks to use more width you use *most* of the width but lose a lot of height
+// setting gaps seems to break centering on canvas
+// sometimes when resizing blocks to use more width you use *most* of the width but lose a lot of height
 // this is an easy fix by fixing the maxHeightRatio i think of just the parent blocks
 // since our Y size is no longer always 100% of the canvas we need to update the yOffset to account for this
 // only really works well at wide aspect ratios currently since you are checking against the width for re-renders. updating to dynamically switch could help a lot here
 
-
-
-
-// TODO: 
-// our images can not be rotated
-// our images can be resized
-// we will attempt to resize to fill as much space as possible
-// we will use greedy placement as the starting point
-
 // ideas:
 // Reduce all image sizes to a 1:x aspect ratio to make the math easier to understand
-// set the first image, subtract the width and height from the overall aspect ratio (size of our canvas)
-// so in this case a 100x100 -> 1:1,
-// we cant just subtract to get 15:9 because that is the largest remaining rectangle NOT the total remaining space (would leave and empty column and an empty row adjacent to the placed image
+
 
 // we can combine blocks in an attempt to create one larger block that more closely matches a desirable aspect ratio
 // for instance, the total canvas can be split into X number of sections where X%2 == 0
@@ -104,11 +80,6 @@ If your software is a complex thing, make it accept some configuration files (in
 // we will size everything down to a 1:x aspect ratio
 // we will put images together in blocks and combine blocks to target the canvas aspect ratio
 
-
-
-
-
-
 // We will need a way to make sure we dont combine blocks with other blocks when it isnt required
 // dont forget to set block.type = "block" when creating a new collection of images
 // when creating a new block we need a decision tree for deciding in which order to combine blocks
@@ -119,7 +90,6 @@ If your software is a complex thing, make it accept some configuration files (in
 // abandonned
 // Idea:
 // we could calculate the average width ratio of each block and then choose to get the closest or farthest ratio based on which column is nearest or farthest from the average
-
-
-
-
+// set the first image, subtract the width and height from the overall aspect ratio (size of our canvas)
+// so in this case a 100x100 -> 1:1,
+// we cant just subtract to get 15:9 because that is the largest remaining rectangle NOT the total remaining space (would leave and empty column and an empty row adjacent to the placed image
