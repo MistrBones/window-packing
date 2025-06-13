@@ -36,19 +36,22 @@ async function main(config={}) {
 
 
     
-    loggingEnabled = parsedArgs?.logging ?? true;
-    canvasWidth = 0;
-    canvasHeight = 0;
-    gap = parsedArgs?.gap ?? 0;
-    marginVertical = parsedArgs?.marginVertical*2 ?? 0;
+    var loggingEnabled = parsedArgs?.logging ?? true;
+    var canvasWidth = 0;
+    var canvasHeight = 0;
+    var gap = parsedArgs?.gap ?? 0;
+    
+    var marginVertical = parsedArgs?.marginVertical*2 ?? 0;
     if (marginVertical/2 < gap) {
         marginVertical = gap*2;
     }
-    marginHorizontal = parsedArgs?.marginHorizontal*2 ?? 0;
+    
+    var marginHorizontal = parsedArgs?.marginHorizontal*2 ?? 0;
     if (marginHorizontal/2 < gap) {
         marginHorizontal = gap*2;
     }
-    images = [];
+
+    var images = [];
 
     
     
@@ -60,7 +63,7 @@ async function main(config={}) {
     images = outputs.windows;
     canvasWidth = outputs.canvasWidth;
     canvasHeight = outputs.canvasHeight;
-    adapterCallback = adapter.callback;
+    var adapterCallback = adapter.callback;
     
     // The adapter is responsible for taking the output of this algorithm (an array with a list of final width/height and x/y offsets) and doing something useful with it. For example, this project was initially created with managing windows in Hyprland in mind so we have a hyprland adapter that runs the necessary hyprctl commands to resize/move windows.
     // Using an adapter here keeps the use cases for this algorithm flexible allowing us to implement other window managers or, for example, masonry style layouts for webpages
@@ -200,13 +203,14 @@ async function main(config={}) {
     }
     
     // variable initial values (use only within place() function)
-    largestSeenArea = 0;
-    largestSeenWidth = canvasWidth;
-    largestSeenHeight = canvasHeight;
-    previousSolution = false;
+    var largestSeenArea = 0;
+    var largestSeenWidth = canvasWidth;
+    var largestSeenHeight = canvasHeight;
+    var previousSolution = false;
+    var scalingFactor = 1;
     // We will track how many times the place() function is called to ensure we don't get in an infinite loop
-    placeCalledCount = 0;
-    placeCalledMaxCount = 50;
+    var placeCalledCount = 0;
+    var placeCalledMaxCount = 50;
 
     // Handles all logic for taking the current list of blocks and combining them into pseudo-blocks 
     function place(blocks) {
@@ -500,10 +504,10 @@ async function main(config={}) {
     // This helps ensure that our base blocks are similarly sized at the end instead of having some massively undersized or oversized blocks.
     // Setting and returning a block of the preferred type allows us to prioritize creating blocks from image blocks, this helps with getting a more equal average image size at the end
     function getClosestRatio(blocks, ratio, preferredBlockType = "image") {
-        target = ratio;
-        difference = 99999999;
-        closestBlock = undefined;
-        closestBlockPreferred = undefined;
+        var target = ratio;
+        var difference = 99999999;
+        var closestBlock = undefined;
+        var closestBlockPreferred = undefined;
         for (const [index, block] of Object.entries(blocks)) {
             var newDifference = Math.abs(target - block.ratio);
             if (newDifference < difference) {
@@ -583,16 +587,16 @@ async function main(config={}) {
     }
     
     // Begin main code
-    targetHeight = canvasHeight - marginVertical;
-    targetWidth = canvasWidth - marginHorizontal;
-    originalTargetWidth = targetWidth;
-    originalTargetHeight = targetHeight;
+    var targetHeight = canvasHeight - marginVertical;
+    var targetWidth = canvasWidth - marginHorizontal;
+    var originalTargetWidth = targetWidth;
+    var originalTargetHeight = targetHeight;
     
     // Gives ratio as width:height where height == 1
-    targetRatio = targetHeight / targetWidth;
-    originalTargetRatio = targetRatio;
+    var targetRatio = targetHeight / targetWidth;
+    var originalTargetRatio = targetRatio;
     
-    i = 0;
+    var i = 0;
     images.forEach((image) => {
     
         // Gives ratio as width:height where height == 1
@@ -608,8 +612,8 @@ async function main(config={}) {
     });
 
     
-    map = {};
-    blocks = images.reduce(function(map, image) {
+    var map = {};
+    var blocks = images.reduce(function(map, image) {
         map[image.index] = image;
         return map;
     }, {});
@@ -638,4 +642,4 @@ if (isNodeEnvironment()) {
     // file probably being included in web browser
 }
 
-//export { main as WindowPacking };
+export { main as WindowPacking };
