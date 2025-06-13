@@ -170,7 +170,6 @@ async function main() {
         }
     }
     
-    
     // variable initial values (use only within place() function)
     largestSeenArea = 0;
     largestSeenWidth = canvasWidth;
@@ -212,10 +211,6 @@ async function main() {
        
         } else {
 
-            if (length == 1) {
-                
-            }
-
             // Blocks would not overflow canvas if placed now
             var averageBlockWidth = getAverageBlockWidth(blocks);
             var widthLeft = 1 - totalSideRatio;
@@ -228,7 +223,6 @@ async function main() {
                 var scaleFactor = getScalingFactorForBlocks(blocks);
                 var blockArea = blockArea * scaleFactor;
                 // we need to calculate a scaling factor to ensure we are comparing end results properly
-    
                 if (blockArea > largestSeenArea) {
                     // We will save the currently calculated blocks incase this solution is better than the later one
                     logger("Saving better potential solution");
@@ -265,7 +259,6 @@ async function main() {
                     // There is no previous calculated solution and we haven't exceeded the max call count
                     return place(blocks);
                 }
-                
             }
     
             if (previousSolution) {
@@ -290,13 +283,14 @@ async function main() {
             // now we need to recalculate the gaps left on the x/y axes so we can properly set our offsets to center the output horizontally and vertically
             var blocksArray = Object.entries(blocks);
             var newSideRatio = getTotalSideRatio(blocksArray);
+            var heightLeft = originalTargetRatio - targetRatio;
+            var heightLeftConverted = heightLeft / originalTargetRatio;
             var currentWidth = targetWidth * newSideRatio;
             var currentHeight = (currentWidth * targetRatio);
 
-            canvasScalingFactor = 1;
+
             scalingFactor = getScalingFactorForBlocks(blocks);
             logger("Block scaling factor: " + scalingFactor, "white", "green");
-            logger("Canvas scaling factor: " + canvasScalingFactor, "white", "green");
             logger("New side ratio: " + newSideRatio, "white", "green");
             var widthLeft = 1-(newSideRatio * scalingFactor);
             var verticalGap = originalTargetHeight - (currentHeight*(scalingFactor*targetRatio));
