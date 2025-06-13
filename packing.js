@@ -202,8 +202,6 @@ async function main() {
             length++;
     
         }
-        //totalSideRatio -= gapRelative;
-
         
         if (totalSideRatio > 1 && length > 1) {
     
@@ -234,12 +232,7 @@ async function main() {
                 if (blockArea > largestSeenArea) {
                     // We will save the currently calculated blocks incase this solution is better than the later one
                     logger("Saving better potential solution");
-                    
-                    
                     previousSolution = structuredClone(blocks);
-                    
-                    
-                    
                     largestSeenWidth = targetWidth;
                     largestSeenHeight = targetHeight;
                     largestSeenArea = blockArea;
@@ -297,96 +290,9 @@ async function main() {
             // now we need to recalculate the gaps left on the x/y axes so we can properly set our offsets to center the output horizontally and vertically
             var blocksArray = Object.entries(blocks);
             var newSideRatio = getTotalSideRatio(blocksArray);
-            var widthLeft = 1 - newSideRatio;
-            var heightLeft = originalTargetRatio - targetRatio;
-            var heightLeftConverted = heightLeft / originalTargetRatio;
-            var gapAbsolute = widthLeft * originalTargetWidth;
-            var verticalGap = originalTargetRatio - targetRatio;
-            var verticalGap = originalTargetHeight - targetHeight;
-            var verticalGapAbsolute = verticalGap;           
-            var yOffset = (marginVertical / 2) + (verticalGapAbsolute / 2);
-            var xOffset = (marginHorizontal / 2) + (gapAbsolute / 2);
-            canvasScalingFactor = 1;
             var currentWidth = targetWidth * newSideRatio;
             var currentHeight = (currentWidth * targetRatio);
 
-            /*
-            if (widthLeft != 0 && heightLeft != 0 && widthLeft > heightLeftConverted || heightLeft < 0) {
-
-                // we sill set height to equal originalTargetRatio
-
-                logger("Setting height to originalTargetHeight", "white", "blue");                
-                if (currentHeight > targetHeight) {
-                    logger("Greater than target height");
-                    canvasScalingFactor = currentHeight / targetHeight;
-                }
-                else {
-                    logger("Less than target height");
-                    canvasScalingFactor = (targetHeight - marginVertical) / currentHeight;
-                }
-                logger("Scaling factor: " + canvasScalingFactor, "white", "green");
-
-                canvasScalingFactor = 1.237;
-                //canvasScalingFactor = canvasScalingFactor / targetRatio;
-                //canvasScalingFactor = 1;
-                targetWidth = currentWidth * canvasScalingFactor;
-                targetRatio = targetHeight/targetWidth;
-                xOffset = (originalTargetWidth - currentWidth) / 2;
-                xOffset += marginHorizontal;
-                xOffset = 0;
-                yOffset = (marginVertical / 2);
-            }
-            else if (widthLeft != 0 && heightLeft != 0 && widthLeft < heightLeftConverted || widthLeft < 0) {
-                logger("Setting target width to 100% of original width", "white", "blue");
-                // we will set width to equal to 1      
-                var currentWidth = targetWidth * newSideRatio;
-                var currentHeight = currentWidth * targetRatio;
-                //targetWidth = (originalTargetWidth);
-                var canvasScalingFactor = currentWidth / targetWidth;
-                if (currentWidth > targetWidth) {
-                    logger("current width larger than target", "white", "blue");
-                    canvasScalingFactor = currentWidth / targetWidth;
-                }
-                else {
-                    logger("current width smaller than target", "white", "blue");
-                    canvasScalingFactor = (targetWidth - marginHorizontal - (2*gap*(blocksArray.length))) / currentWidth;
-                    canvasScalingFactor = (targetWidth - (gap*(blocksArray.length - 1))) / targetWidth;
-                    canvasScalingFactor = 1 - (0.5*gapRelative);
-                    //canvasScalingFactor = 0.87;
-                }       
-                targetHeight = currentHeight*canvasScalingFactor;
-                targetWidth = targetHeight/targetRatio;
-                targetRatio = targetHeight/targetWidth;
-                xOffset = (marginHorizontal/2);
-                if (originalTargetHeight > targetHeight) {
-                    yOffset = originalTargetHeight - targetHeight;
-                    yOffset = yOffset/2;
-                    
-                    yOffset = 0;
-                    yOffset = marginVertical/2;
-                }
-                else {
-                    yOffset = (targetHeight - originalTargetHeight)/2;
-                    //yOffset += marginVertical/2;
-                    yOffset -= (marginHorizontal*1*originalTargetRatio);
-                    yOffset -= marginVertical/2;
-
-                }   
-            }
-            else {
-                logger("\x1b[44m height or width =1 \x1b[0m");
-                if (widthLeft == 0) {
-                    
-                    targetWidth = targetWidth - marginHorizontal;
-                }
-                if (heightLeft == 0) {
-                    
-                    targetHeight = originalTargetHeight - (marginVertical/4);
-                    yOffset = (marginVertical/2);
-                    //targetHeight = originalTargetHeight;
-                }
-            }
-            */
             canvasScalingFactor = 1;
             scalingFactor = getScalingFactorForBlocks(blocks);
             logger("Block scaling factor: " + scalingFactor, "white", "green");
@@ -397,7 +303,8 @@ async function main() {
             var heightLeft = verticalGap;
             logger("width left; " + widthLeft);
             logger("height left; " + heightLeft);
-            xOffset = (widthLeft * targetWidth * 0.5) + (marginHorizontal/2);
+            var xOffset = (widthLeft * targetWidth * 0.5) + (marginHorizontal/2);
+            var yOffset = 0;
 
 
             // the xOffset and yOffset properties here will allow to track the cumulative offsets from previously placed blocks once we call the sizeAndPositionBlocks() function
@@ -506,8 +413,7 @@ async function main() {
                 logger("Height ratio filled: " + heightRatioFilled);
                 if (newSideRatio > (1- heightLeftConverted)) {
                     // taking horizontal space
-                    logger("Taking horizontal space for gap resizing", "white", "red");
-                    //block = scaleBlockToCanvas(block, targetRatio);               
+                    logger("Taking horizontal space for gap resizing", "white", "red");           
                     block.maxWidthRatio = block.maxWidthRatio - ((1.25) * (gapRelative));
                     blockWidth = block.maxWidthRatio * targetWidth * scalingFactor;
                     blockWidthTally += block.maxWidthRatio;
@@ -515,8 +421,6 @@ async function main() {
                 else {
                     // taking vertical space
                     logger("Taking vertical space for gap resizing", "white", "red");
-                    //block = scaleBlockToCanvas(block, targetRatio);
-                    //block.maxWidthRatio = block.maxWidthRatio - ((1) * (gapRelative*originalTargetRatio));
                     logger("total block children" + totalBlockChildren);
                     var numGaps = totalBlockChildren;
                     var gapSize = (numGaps  -1)*gap;
