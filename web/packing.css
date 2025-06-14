@@ -1,0 +1,8 @@
+.window-packing-parent {
+    position: relative;
+}
+
+.window-packing-parent > * {
+    position: absolute;
+    display: none;
+}

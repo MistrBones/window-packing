@@ -17,51 +17,107 @@
       background: #282828;
       width: 1600px;
       height: 900px;
+      overflow: hidden;
     }
     </style>
+
   </head>
   <body>
-    <script>
-    function handleJs(e) {
-      e.preventDefault();
-      var input = event.target.querySelectorAll("textarea")[0];
-      code = input.value;
-      localStorage.setItem("code", code);
-      try {
-      eval(code);
-      }
-      catch (exception) {
-        alert("An error occurred, check console output");
-        console.log(exception);
-        console.trace();
-      }
-      return;
-    }
-    
-  </script>
   <div style="margin-top: 35px; margin-bottom: 35px;">
     <div class="canvas" style="position: relative;"></div>
   </div>
-  <form onsubmit="return handleJs(event)" style="display: block; margin-bottom: 20px;">
-      <button style="padding: 20px 20px; text-align: center; display: block; margin: 20px auto;" type="submit">Evaluate</button>
 
-    <textarea name="code" id="code" style="width: 60vw; min-height: 350px; display: block;" placeholder="Enter code here"></textarea>
-  </form>
-  
-  <script>
+      <script type="module">
+import { WindowPacking } from "/packing.js";
 
-  var code = localStorage.getItem("code");
-  var codeEl = document.getElementById("code");
-  if (code) {
-    console.log("Getting code");
-  }
-      var target = document.querySelectorAll("textarea")[0];
-      target.value = code;
-      //target.style.height = target.scrollHeight + "px";
-      target.addEventListener("input", (event) => {
-        //event.target.style.height = event.target.scrollHeight + "px";
-      });
-  </script>
+RNG.prototype.nextInt = function() {
+    this.state = (this.a * this.state + this.c) % this.m;
+    return this.state;
+}
+
+
+RNG.prototype.nextFloat = function() {
+    // returns in range [0,1]
+    return this.nextInt() / (this.m - 1);
+}
+
+
+RNG.prototype.nextRange = function(start, end) {
+    // returns in range [start, end): including start, excluding end
+    // can't modulu nextInt because of weak randomness in lower bits
+    var rangeSize = end - start;
+    var randomUnder1 = this.nextInt() / this.m;
+    return start + Math.floor(randomUnder1 * rangeSize);
+}
+
+
+RNG.prototype.choice = function(array) {
+    return array[this.nextRange(0, array.length)];
+}
+
+
+function RNG(seed) {
+    // LCG using GCC's constants
+    this.m = 0x80000000; // 2**31;
+    this.a = 1103515245;
+    this.c = 12345;
+
+    this.state = seed ? seed : Math.floor(Math.random() * (this.m - 1));
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+ // Get random images
+      var imageDimensions = [
+        [1536, 640],
+        [1344, 768],
+        [1216, 832],
+        [1152, 896],
+        [1024, 1024],
+        [896, 1152],
+        [832, 1216],
+        [768, 1344],
+        [640, 1536]
+      ];
+      var rngSeed = 26;
+      var rng = new RNG(rngSeed);
+      var imageCount = 10;
+
+      var canvas = document.querySelectorAll(".canvas")[0];
+      var images = [];
+      for (var i = 0; i < imageCount; i++) {
+        var index = rng.nextRange(0, imageDimensions.length);
+        var width = imageDimensions[index][0];
+        var height = imageDimensions[index][1];
+        images.push({
+          width: width,
+          height: height,
+          src: "https://placehold.co/" + width + "x" + height
+        });
+      }
+
+      for (var i in images) {
+        var image = images[i];
+        var img = document.createElement("img");
+        img.setAttribute("src", image.src);
+        img.setAttribute("data-width", image.width);
+        img.setAttribute("data-height", image.height);
+        canvas.appendChild(img);
+      }
+
+
+      // Images appended now lets run placement
+        var canvas = document.querySelectorAll("div.canvas")[0];
+        var config = {
+          adapter: "/adapters/web.js",
+          container: canvas,
+          logging: true,
+          gap: 10
+        };
+        var packed = WindowPacking(config);
+});
+     
+    </script>
+
 
   </body>
 </html>

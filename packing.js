@@ -33,12 +33,14 @@ async function main(config={}) {
     var canvasHeight = 0;
     var gap = parsedArgs?.gap ?? 0;
     
-    var marginVertical = parsedArgs?.marginVertical*2 ?? 0;
+    var marginVertical = parsedArgs?.marginVertical ?? 0;
+    marginVertical *= 2;
     if (marginVertical/2 < gap) {
         marginVertical = gap*2;
     }
     
-    var marginHorizontal = parsedArgs?.marginHorizontal*2 ?? 0;
+    var marginHorizontal = parsedArgs?.marginHorizontal ?? 0;
+    marginHorizontal *= 2;
     if (marginHorizontal/2 < gap) {
         marginHorizontal = gap*2;
     }
@@ -198,9 +200,13 @@ async function main(config={}) {
     var largestSeenHeight = canvasHeight;
     var previousSolution = false;
     var scalingFactor = 1;
+    var defaultYOffset = false;
+    var defaultXOffset = false;
     // We will track how many times the place() function is called to ensure we don't get in an infinite loop
     var placeCalledCount = 0;
     var placeCalledMaxCount = 50;
+    var renderedHeight = 0;
+    var renderedWidth = 0;
 
     // Handles all logic for taking the current list of blocks and combining them into pseudo-blocks 
     function place(blocks) {
@@ -321,6 +327,7 @@ async function main(config={}) {
             logger("width left; " + widthLeft);
             logger("height left; " + heightLeft);
             var xOffset = (widthLeft * targetWidth * 0.5) + (marginHorizontal/2);
+            defaultXOffset = xOffset;
             var yOffset = 0;
 
 
@@ -419,7 +426,6 @@ async function main(config={}) {
             }
 
             var blockWidthTally = 0;
-            var defaultYOffset = false;
             targetRatio = targetHeight / targetWidth;
             for (var i = 0; i < sorted.length; i++) {
                 var block = sorted[i];
@@ -428,10 +434,12 @@ async function main(config={}) {
                 var blockWidth = 1;
                 logger("Width ratio filled: " + newSideRatio);
                 logger("Height ratio filled: " + heightRatioFilled);
+                var initialMaxWidthRatio = block.maxWidthRatio;
                 if (newSideRatio > (1- heightLeftConverted)) {
                     // taking horizontal space
                     logger("Taking horizontal space for gap resizing", "white", "red");           
-                    block.maxWidthRatio = block.maxWidthRatio - ((1.25) * (gapRelative));
+                    //block.maxWidthRatio = block.maxWidthRatio - ((1.25) * (gapRelative));
+                    block.maxWidthRatio = block.maxWidthRatio - ((sorted.length - 1.5) * (gapRelative/block.ratio));
                     blockWidth = block.maxWidthRatio * targetWidth * scalingFactor;
                     blockWidthTally += block.maxWidthRatio;
                 }
@@ -447,17 +455,19 @@ async function main(config={}) {
                     block.maxWidthRatio = block.maxWidthRatio - (gapSizeRelative/block.ratio);
                     blockWidthTally += block.maxWidthRatio;
                     blockWidth = (block.maxWidthRatio * originalTargetWidth * scalingFactor);
-
                 }
                 if (defaultYOffset === false) {
+                    // This will only run for the first block so any operations that need to only happen once will happen here
                     var totalHeight = originalTargetHeight;
                     var currentHeight = blockWidth * block.ratio;
                     var verticalGap = totalHeight - currentHeight;
-                    defaultYOffset = (verticalGap/2) + (0*marginVertical/2);
+                    defaultYOffset = (verticalGap/2) + (0.5*marginVertical/2);
                     logger("default y offset: " + defaultYOffset);
+                    renderedHeight = initialMaxWidthRatio*targetWidth*block.ratio;
                 }
 
                 placed.yOffset = defaultYOffset;
+                renderedWidth += blockWidth;
                 placed = sizeAndPositionBlocks(block, blockWidth, placed);
                 placed.xOffset = placed.xOffset + (gap*1) + (blockWidth);// + gap*2;
             }
@@ -481,8 +491,8 @@ async function main(config={}) {
             var imageHeight = (imageWidth * block.ratio);
             block.finalHeight = imageHeight;
             block.finalWidth = imageWidth;
-            block.x = placed.xOffset;
-            block.y = placed.yOffset;
+            block.xOffset = placed.xOffset;
+            block.yOffset = placed.yOffset;
             placed.images.push(block);
             placed.yOffset = placed.yOffset + block.finalHeight + 1*gap;
         }
@@ -549,6 +559,10 @@ async function main(config={}) {
     
     function logger(message, fg="white", bg="transparent") {
         if (loggingEnabled) {
+            if (!isNodeEnvironment()) {
+                console.log("%c " + message, 'color: ' + fg + '; background: ' + bg);
+                return;
+            }
             console.log(
                 getColorANSI(fg, "fg") + getColorANSI(bg, "bg") + message + " \x1b[0m"
             );
@@ -610,8 +624,16 @@ async function main(config={}) {
     
     // Our blocks map is ready for placement
     var placed = place(blocks);
+    var result = {
+        blocks: placed,
+        defaultXOffset: defaultXOffset,
+        defaultYOffset: defaultYOffset,
+        renderedWidth: renderedWidth,
+        renderedHeight: renderedHeight,
+        userArgs: parsedArgs
+    };
     logger("Place function called " + placeCalledCount + " times");
-    adapterCallback(placed);
+    adapterCallback(result);
     return;
 }
 

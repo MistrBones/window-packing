@@ -62,19 +62,20 @@ export const adapt = ( args ) => {
     };
 }
 
-export const callback = async(windows) => {
+export const callback = async(result) => {
     var commandArray = [];
+    var windows = result.blocks;
     for (var i = 0; i < windows.images.length; i++) {
         var window = windows.images[i];
         var width = Math.round(window.finalWidth);
         var height = Math.round(window.finalHeight);
         var address = window.address;
         var resizeCommand = "hyprctl dispatch resizewindowpixel exact " + width + " " + height + ",address:" + address;
-        window.x = window.x + monitorXOffset;
-        window.y = window.y + monitorYOffset;
-        window.x = Math.round(window.x);
-        window.y = Math.round(window.y);
-        var moveCommand = "hyprctl dispatch movewindowpixel exact " + window.x + " " + window.y + ",address:" + address;
+        window.xOffset = window.xOffset + monitorXOffset;
+        window.yOffset = window.yOffset + monitorYOffset;
+        window.xOffset = Math.round(window.xOffset);
+        window.yOffset = Math.round(window.yOffset);
+        var moveCommand = "hyprctl dispatch movewindowpixel exact " + window.xOffset + " " + window.yOffset + ",address:" + address;
 
         commandArray.push(resizeCommand);
         commandArray.push(moveCommand);
