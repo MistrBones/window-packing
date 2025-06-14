@@ -5,8 +5,8 @@ export const adapt = ( args ) => {
         throw "No container element provided which is required for script execution";
     }
 
-    var canvasWidth = canvas.clientWidth;
-    var canvasHeight = canvas.clientHeight;
+    var canvasWidth = args?.canvasWidth ?? canvas.clientWidth;
+    var canvasHeight = args?.canvasHeight ?? canvas.clientHeight;
     var windows = [];
 
     for (var i = 0; i < canvas.children.length; i++) {
@@ -31,15 +31,17 @@ export const adapt = ( args ) => {
 export const callback = async(result) => {
     var images = result.blocks.images;
     var container = result.userArgs.container;
+    var xOffset = parseInt(result.defaultXOffset);
+    xOffset -= result.userArgs.gap;
+    var yOffset = parseInt(result.defaultYOffset);
+    yOffset -= result.userArgs.gap;
     container.classList.add("window-packing-parent");
     for (var i in images) {
         var image = images[i];
         var imageElement = container.querySelectorAll("*[data-id='" + image.index + "']")[0];
-        imageElement.style.position = "absolute";
-        imageElement.style.top = Math.round(image.yOffset) + "px";
-        imageElement.style.left = Math.round(image.xOffset) + "px";
         imageElement.style.width = Math.round(image.finalWidth) + "px";
         imageElement.style.height = Math.round(image.finalHeight) + "px";
-        imageElement.style.display = "block";
+        imageElement.style.top = Math.round(image.yOffset) - yOffset + "px";
+        imageElement.style.left = Math.round(image.xOffset) - xOffset + "px";
     }
 }

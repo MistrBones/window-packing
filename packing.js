@@ -427,10 +427,26 @@ async function main(config={}) {
 
             var blockWidthTally = 0;
             targetRatio = targetHeight / targetWidth;
+            var lowestChildrenSeen = 99999999;
+            var highestChildrenSeen = 0;
+
+            for (var i = 0; i < sorted.length; i++) {
+                var totalBlockChildren = getTotalBlockChildren(sorted[i]);
+                sorted[i].totalChildren = totalBlockChildren;
+                if (totalBlockChildren < lowestChildrenSeen) {
+                    lowestChildrenSeen = totalBlockChildren;
+                }
+                if (totalBlockChildren > highestChildrenSeen) {
+                    highestChildrenSeen = totalBlockChildren;
+                }
+            }
+
+            var childDifference = highestChildrenSeen - lowestChildrenSeen;
+
             for (var i = 0; i < sorted.length; i++) {
                 var block = sorted[i];
-                
-                var totalBlockChildren = getTotalBlockChildren(sorted[i]);
+                var totalBlockChildren = block.totalChildren;
+                var childDifference = highestChildrenSeen - totalBlockChildren;
                 var blockWidth = 1;
                 logger("Width ratio filled: " + newSideRatio);
                 logger("Height ratio filled: " + heightRatioFilled);
@@ -439,14 +455,19 @@ async function main(config={}) {
                     // taking horizontal space
                     logger("Taking horizontal space for gap resizing", "white", "red");           
                     //block.maxWidthRatio = block.maxWidthRatio - ((1.25) * (gapRelative));
-                    block.maxWidthRatio = block.maxWidthRatio - ((sorted.length - 1.5) * (gapRelative/block.ratio));
+                    //block.maxWidthRatio = block.maxWidthRatio - ((sorted.length - 1 + (totalBlockChildren - lowestChildrenSeen - 1))*(gapRelative/block.ratio));
+                    var newHeight = targetRatio * targetWidth;
+                    var gapSizeVertical = gap;
+                    newHeight = newHeight - ((totalBlockChildren) * gapSizeVertical);
+                    var newRatio = newHeight / targetWidth;
+                    block.maxWidthRatio = newHeight / block.ratio;
+                    block.maxWidthRatio = newRatio / block.ratio;
                     blockWidth = block.maxWidthRatio * targetWidth * scalingFactor;
                     blockWidthTally += block.maxWidthRatio;
                 }
                 else {
                     // taking vertical space
                     logger("Taking vertical space for gap resizing", "white", "red");
-                    logger("total block children" + totalBlockChildren);
                     var numGaps = totalBlockChildren;
                     var gapSize = (numGaps  -1)*gap;
                     logger("Gap size: " + gapSize);
@@ -504,6 +525,7 @@ async function main(config={}) {
     // This helps ensure that our base blocks are similarly sized at the end instead of having some massively undersized or oversized blocks.
     // Setting and returning a block of the preferred type allows us to prioritize creating blocks from image blocks, this helps with getting a more equal average image size at the end
     function getClosestRatio(blocks, ratio, preferredBlockType = "image") {
+        //return getFarthestRatio(blocks, ratio, preferredBlockType);
         var target = ratio;
         var difference = 99999999;
         var closestBlock = undefined;
@@ -522,6 +544,28 @@ async function main(config={}) {
             return closestBlockPreferred
         }
         return closestBlock;
+    }
+
+
+    function getFarthestRatio(blocks, ratio, preferredBlockType="image") {
+        var target = ratio;
+        var difference = 0;
+        var farthestBlock = undefined;
+        var farthestBlockPreferred = undefined;
+        for (const [index, block] of Object.entries(blocks)) {
+            var newDifference = Math.abs(target - block.ratio);
+            if (newDifference > difference) {
+                difference = newDifference;
+                farthestBlock = block;
+                if (block.type == preferredBlockType) {
+                    farthestBlockPreferred = block;
+                }
+            }
+        };
+        if (farthestBlockPreferred) {
+            return farthestBlockPreferred
+        }
+        return farthestBlock;
     }
     
     // If this function was called it's because the current blocks does not form a valid solution
@@ -621,6 +665,22 @@ async function main(config={}) {
         map[image.index] = image;
         return map;
     }, {});
+
+
+    try {
+        var acceptSolution = adapter?.acceptSolution ?? false;
+        if (!acceptSolution) {
+            throw "No acceptance function defined";
+        }
+    } catch (error) {
+        // No function was defined so we default to acceping the solution
+        logger("The adapter did not define a function for accepting algorithm solutions so the first solution will always be accepted", "white", "red");
+        var acceptSolution = function() {
+            return {
+                isAccepted: true
+            }
+        }
+    }
     
     // Our blocks map is ready for placement
     var placed = place(blocks);
@@ -630,11 +690,24 @@ async function main(config={}) {
         defaultYOffset: defaultYOffset,
         renderedWidth: renderedWidth,
         renderedHeight: renderedHeight,
-        userArgs: parsedArgs
+        userArgs: parsedArgs,
+        blocksPlaced: blocks
     };
-    logger("Place function called " + placeCalledCount + " times");
-    adapterCallback(result);
-    return;
+
+    var solutionCheck = acceptSolution( result );
+    if (solutionCheck.isAccepted) {
+        console.log("New solution accepted");
+        logger("Place function called " + placeCalledCount + " times");
+        adapterCallback(result);
+        return;
+    }
+    else {
+        console.log("Solution rejected");
+        console.log(solutionCheck.newArgs);
+        main(solutionCheck.newArgs);
+    }
+
+
 }
 
 function isNodeEnvironment() {

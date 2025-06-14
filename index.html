@@ -4,20 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test playground</title>
+    <link rel="stylesheet" href="/web/packing.css">
     <style>
     body {
       background: #1f1f1f;
       display: flex;
       justify-content: center;
       align-items: center;
-      flex-direction: column;
+      flex-direction: column
     }
     
     .canvas {
       background: #282828;
       width: 1600px;
       height: 900px;
-      overflow: hidden;
+      overflow: hidden
     }
     </style>
 
@@ -80,7 +81,7 @@ document.addEventListener("DOMContentLoaded", function() {
       ];
       var rngSeed = 26;
       var rng = new RNG(rngSeed);
-      var imageCount = 10;
+      var imageCount = 12;
 
       var canvas = document.querySelectorAll(".canvas")[0];
       var images = [];
@@ -110,8 +111,9 @@ document.addEventListener("DOMContentLoaded", function() {
         var config = {
           adapter: "/adapters/web.js",
           container: canvas,
-          logging: true,
-          gap: 10
+          logging: false,
+          gap: 10,
+          columns: 3
         };
         var packed = WindowPacking(config);
 });

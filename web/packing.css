@@ -4,5 +4,8 @@
 
 .window-packing-parent > * {
     position: absolute;
-    display: none;
+    top: -100vh;
+    left: -100vw;
+    transition-property: top, left;
+    transition-duration: 4s;
 }
