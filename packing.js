@@ -32,6 +32,13 @@ async function main(config={}) {
     var canvasWidth = 0;
     var canvasHeight = 0;
     var gap = parsedArgs?.gap ?? 0;
+    var shuffleElements = parsedArgs?.shuffle ?? "false";
+    if (shuffleElements == "true") {
+        shuffleElements = true;
+    }
+    else {
+        shuffleElements = false;
+    }
     
     var marginVertical = parsedArgs?.marginVertical ?? 0;
     marginVertical *= 2;
@@ -177,17 +184,18 @@ async function main(config={}) {
         var horizontalGapAdjusted = gapAbsolute / (1 - marginRatio);
         var verticalGapAdjusted = verticalGapAbsolute / (originalTargetRatio - verticalMarginRatio);
 
-        logger("horizontal gap adjusted: " + horizontalGapAdjusted);
-        logger("vertical gap adjusted: " + verticalGapAdjusted);
+        //logger("horizontal gap adjusted: " + horizontalGapAdjusted);
+        //logger("vertical gap adjusted: " + verticalGapAdjusted);
         if (horizontalGapAdjusted < verticalGapAdjusted) {
             // we will fill the X dimension before the Y dimension
             logger("Filling X dimension first in block scaling factor function", "white", "black");
-            var targetWidthRatio = 1;
+            var targetWidthRatio = 1 - (2*marginRatio);
             return targetWidthRatio / totalSideRatio;
         } else {
             // we will fill the Y dimension before the X dimension
             logger("Filling Y dimension first in block scaling factor function", "white", "black");
-            var targetHeightRatio = originalTargetRatio;
+            var targetHeightRatio = originalTargetRatio - (verticalMarginRatio*targetRatio);
+            //var targetHeightRatio = originalTargetRatio;
             var totalHeightRatio = blocksArray[0][1].maxHeightRatio;
             
             return targetHeightRatio / totalHeightRatio;
@@ -204,7 +212,8 @@ async function main(config={}) {
     var defaultXOffset = false;
     // We will track how many times the place() function is called to ensure we don't get in an infinite loop
     var placeCalledCount = 0;
-    var placeCalledMaxCount = 50;
+    var placeCalledMaxCount = parsedArgs?.maxCallCount ?? 100;
+
     var renderedHeight = 0;
     var renderedWidth = 0;
 
@@ -326,7 +335,8 @@ async function main(config={}) {
             var heightLeft = verticalGap;
             logger("width left; " + widthLeft);
             logger("height left; " + heightLeft);
-            var xOffset = (widthLeft * targetWidth * 0.5) + (marginHorizontal/2);
+            var xOffset = (widthLeft * originalTargetWidth * 0.5); //+ (marginHorizontal/2);
+            var xOffset = (widthLeft * originalTargetWidth * 0.5); //+ (marginHorizontal/2);
             defaultXOffset = xOffset;
             var yOffset = 0;
 
@@ -362,47 +372,12 @@ async function main(config={}) {
             // Gaussian = widest rows in center
             // Or we can skip all sorting and add blocks in whatever order they come in
             var sorted = gaussianArray;
-            //shuffle(sorted);
+            if (shuffleElements) {
+                shuffle(sorted);
+            }
 
 
-            var totalBlocks = sorted.length;
             var gapRelative = (gap / canvasWidth) * originalTargetRatio;
-            var gapDifference = gap * (totalBlocks + 1);
-            
-
-            // Calculate placed image X and Y positions
-            var finalCanvasHeight = canvasHeight - marginVertical - (0*gap);
-            var finalCanvasWidth = canvasWidth - marginHorizontal + (1*gap);
-
-            var finalCanvasHeight = canvasHeight - marginVertical - (0*gap);
-            var finalCanvasWidth = canvasWidth - marginHorizontal - (0*gap);
-
-            //var finalCanvasHeight = originalTargetHeight - marginVertical - (0*gap);
-            //var finalCanvasHeight = canvasHeight - marginVertical - (0*gap);
-            var finalCanvasWidth = targetWidth - marginHorizontal - gapDifference + (2*gap);
-            var finalCanvasHeight = targetHeight;
-
-            // get original target ratio and current target ratio
-            var currentTargetRatio = targetHeight/targetWidth;
-            
-            if (targetRatio < originalTargetRatio) {
-                // run out of height? first
-                
-                finalCanvasHeight = originalTargetHeight;
-                finalCanvasWidth = (finalCanvasHeight / (currentTargetRatio)) + (1*gap);
-
-            }
-            else {
-                //runs out of the other first
-                
-                finalCanvasWidth = originalTargetWidth;
-                finalCanvasHeight = finalCanvasWidth * currentTargetRatio;
-                
-            }
-
-            var finalCanvasRatio = finalCanvasHeight/finalCanvasWidth;
-            var heightRatioFilled = getBlockHeight(sorted) / finalCanvasRatio;
-            
 
             function scaleBlockToCanvas(block, canvasRatio) {
                 var blockHeight = block.maxHeightRatio;
@@ -441,57 +416,61 @@ async function main(config={}) {
                 }
             }
 
-            var childDifference = highestChildrenSeen - lowestChildrenSeen;
-
+            logger("Width ratio filled: " + newSideRatio);
             for (var i = 0; i < sorted.length; i++) {
                 var block = sorted[i];
                 var totalBlockChildren = block.totalChildren;
-                var childDifference = highestChildrenSeen - totalBlockChildren;
-                var blockWidth = 1;
-                logger("Width ratio filled: " + newSideRatio);
-                logger("Height ratio filled: " + heightRatioFilled);
+                var blockWidth = 0;
+                //logger("Height ratio filled: " + heightRatioFilled);
                 var initialMaxWidthRatio = block.maxWidthRatio;
-                if (newSideRatio > (1- heightLeftConverted)) {
+                if (false || newSideRatio > (1- heightLeftConverted)) {
                     // taking horizontal space
                     logger("Taking horizontal space for gap resizing", "white", "red");           
-                    //block.maxWidthRatio = block.maxWidthRatio - ((1.25) * (gapRelative));
-                    //block.maxWidthRatio = block.maxWidthRatio - ((sorted.length - 1 + (totalBlockChildren - lowestChildrenSeen - 1))*(gapRelative/block.ratio));
+                    block.maxWidthRatio = block.maxWidthRatio * scalingFactor;
+                    var numGaps = sorted.length;
+                    var gapRatio = gap/targetWidth;
                     var newHeight = targetRatio * targetWidth;
+                    var newHeight = newHeight * scalingFactor;
                     var gapSizeVertical = gap;
-                    newHeight = newHeight - ((totalBlockChildren) * gapSizeVertical);
+                    newHeight = newHeight - ((totalBlockChildren-1) * gapSizeVertical);
                     var newRatio = newHeight / targetWidth;
-                    block.maxWidthRatio = newHeight / block.ratio;
                     block.maxWidthRatio = newRatio / block.ratio;
-                    blockWidth = block.maxWidthRatio * targetWidth * scalingFactor;
+                    blockWidth = block.maxWidthRatio * originalTargetWidth;
                     blockWidthTally += block.maxWidthRatio;
                 }
                 else {
                     // taking vertical space
                     logger("Taking vertical space for gap resizing", "white", "red");
+                    block.maxWidthRatio = block.maxWidthRatio * scalingFactor;
                     var numGaps = totalBlockChildren;
                     var gapSize = (numGaps  -1)*gap;
                     logger("Gap size: " + gapSize);
+                    // represents gap size as a width, we need it as a height
                     var gapSizeRelative = (gapSize/originalTargetWidth);
                     logger("Gap size relative: " + gapSizeRelative);
                     block.maxWidthRatio = block.maxWidthRatio - (gapSizeRelative/block.ratio);
                     blockWidthTally += block.maxWidthRatio;
-                    blockWidth = (block.maxWidthRatio * originalTargetWidth * scalingFactor);
+                    blockWidth = (block.maxWidthRatio * originalTargetWidth);
                 }
                 if (defaultYOffset === false) {
                     // This will only run for the first block so any operations that need to only happen once will happen here
                     var totalHeight = originalTargetHeight;
                     var currentHeight = blockWidth * block.ratio;
+                    var currentHeight = (blockWidth * block.ratio) + (gap * (totalBlockChildren-1));
                     var verticalGap = totalHeight - currentHeight;
-                    defaultYOffset = (verticalGap/2) + (0.5*marginVertical/2);
+                    //defaultYOffset = (verticalGap/2) + (0.5*marginVertical);
+                    defaultYOffset = (verticalGap/2) + (0.25*marginVertical);
                     logger("default y offset: " + defaultYOffset);
-                    renderedHeight = initialMaxWidthRatio*targetWidth*block.ratio;
+                    //placed.xOffset = placed.xOffset - gap;
                 }
 
                 placed.yOffset = defaultYOffset;
                 renderedWidth += blockWidth;
+                renderedWidth += gap;
                 placed = sizeAndPositionBlocks(block, blockWidth, placed);
-                placed.xOffset = placed.xOffset + (gap*1) + (blockWidth);// + gap*2;
+                placed.xOffset = placed.xOffset + (gap*1) + (blockWidth);
             }
+            renderedWidth += gap;
             return placed;
         }
     }
@@ -565,7 +544,7 @@ async function main(config={}) {
         if (farthestBlockPreferred) {
             return farthestBlockPreferred
         }
-        return farthestBlock;
+        return farthestBlockPreferred;
     }
     
     // If this function was called it's because the current blocks does not form a valid solution
@@ -635,8 +614,8 @@ async function main(config={}) {
     }
     
     // Begin main code
-    var targetHeight = canvasHeight - marginVertical;
-    var targetWidth = canvasWidth - marginHorizontal;
+    var targetHeight = canvasHeight - (marginVertical/2);
+    var targetWidth = canvasWidth - (marginHorizontal/2);
     var originalTargetWidth = targetWidth;
     var originalTargetHeight = targetHeight;
     
@@ -696,14 +675,11 @@ async function main(config={}) {
 
     var solutionCheck = acceptSolution( result );
     if (solutionCheck.isAccepted) {
-        console.log("New solution accepted");
         logger("Place function called " + placeCalledCount + " times");
         adapterCallback(result);
         return;
     }
     else {
-        console.log("Solution rejected");
-        console.log(solutionCheck.newArgs);
         main(solutionCheck.newArgs);
     }
 
@@ -719,9 +695,9 @@ if (isNodeEnvironment()) {
         main();
     } catch ( error ) {
         console.error(
-            "An error occurred and the script could not be executed"
+            "Script execution was cancelled due to an unhandled exception:"
         );
-        
+        console.log(error);
     }
 } else {
     // file probably being included in web browser

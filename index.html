@@ -20,16 +20,68 @@
       height: 900px;
       overflow: hidden
     }
+
+    label {
+      display: block;
+      margin-bottom: 25px;
+      color: #dddddd;
+      font-size: 1.5em;
+      font-weight: 600;
+      font-family:Arial, Helvetica, sans-serif;
+    }
+
+    label input {
+      display: block;
+      margin-top: 10px;
+      padding: 5px;
+    }
+
+    .options button {
+      padding: 10px;
+      font-size: 1.5em;
+      width: 100%;
+      text-align: center;
+    }
     </style>
 
   </head>
   <body>
   <div style="margin-top: 35px; margin-bottom: 35px;">
-    <div class="canvas" style="position: relative;"></div>
+    <div class="canvas" style="position: relative;"><div class="container window-packing-parent"></div></div>
   </div>
+  <div class="options">
+    <label>
+      Number of images
+      <input id="image-count" type="text" value="20"></input>
+    </label>
+    <label>
+      Canvas Width
+      <input id="canvas-width" type="text" value="1600"></input>
+    </label>
+      <label>
+      Canvas Height
+      <input id="canvas-height" type="text" value="900"></input>
+    </label>
+      <label>
+      Gap Width
+      <input id="gap-width" type="text" value="10"></input>
+    </label>
+      <label>
+      Animation Delay
+      <input id="animation-delay" type="text" value="10"></input>
+    </label>
+    <button class="submit">Update Canvas</button>
+  </div>
+
 
       <script type="module">
 import { WindowPacking } from "/packing.js";
+
+function getRandomInteger(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
 RNG.prototype.nextInt = function() {
     this.state = (this.a * this.state + this.c) % this.m;
@@ -79,11 +131,15 @@ document.addEventListener("DOMContentLoaded", function() {
         [768, 1344],
         [640, 1536]
       ];
-      var rngSeed = 26;
+      var rngSeed = 37;
+      //var rngSeed = getRandomInteger(1, 1000000);
+      //rngSeed = 320800;
+      console.log("RNG SEED: " + rngSeed);
       var rng = new RNG(rngSeed);
-      var imageCount = 12;
+      var imageCount = 50;
 
       var canvas = document.querySelectorAll(".canvas")[0];
+      var container = canvas.querySelectorAll(".container")[0];
       var images = [];
       for (var i = 0; i < imageCount; i++) {
         var index = rng.nextRange(0, imageDimensions.length);
@@ -102,7 +158,7 @@ document.addEventListener("DOMContentLoaded", function() {
         img.setAttribute("src", image.src);
         img.setAttribute("data-width", image.width);
         img.setAttribute("data-height", image.height);
-        canvas.appendChild(img);
+        container.appendChild(img);
       }
 
 
@@ -111,11 +167,51 @@ document.addEventListener("DOMContentLoaded", function() {
         var config = {
           adapter: "/adapters/web.js",
           container: canvas,
-          logging: false,
+          logging: true,
           gap: 10,
-          columns: 3
+          columns: 3,
+          maxCallCount: 300,
+          delay: 10,
+          animate: true
         };
         var packed = WindowPacking(config);
+
+
+        var submit = document.querySelectorAll(".submit")[0];
+
+        submit.addEventListener("click", function() {
+          var options = document.querySelectorAll(".options input");
+          var imageCount = parseInt(options[0].value);
+          var images = [];
+          for (var i = 0; i < imageCount; i++) {
+            var index = rng.nextRange(0, imageDimensions.length);
+            var width = imageDimensions[index][0];
+            var height = imageDimensions[index][1];
+            images.push({
+              width: width,
+              height: height,
+              src: "https://placehold.co/" + width + "x" + height
+            });
+            // We must reset the container
+            container.innerHTML = "";
+          }
+          for (var i in images) {
+            var image = images[i];
+            var img = document.createElement("img");
+            img.setAttribute("src", image.src);
+            img.setAttribute("data-width", image.width);
+            img.setAttribute("data-height", image.height);
+            container.appendChild(img);
+          }
+
+          // we must set our options
+
+          config.gap = options[3].value;
+          config.delay = parseInt(options[4].value);
+          container.parentElement.style.width = options[1].value + "px";
+          container.parentElement.style.height = options[2].value + "px";
+          WindowPacking(config);
+        });
 });
      
     </script>

@@ -1,11 +1,16 @@
 .window-packing-parent {
     position: relative;
+    display: block;
+    margin: auto;
 }
 
 .window-packing-parent > * {
     position: absolute;
-    top: -100vh;
-    left: -100vw;
-    transition-property: top, left;
-    transition-duration: 4s;
+    width: 0px;
+    height: 0px;
+    top: 50%;
+    left: 50%;
+    transition-property: width, height, transform, top, left;
+    transition-duration: 0.2s;
+    transition-timing-function: ease;
 }
