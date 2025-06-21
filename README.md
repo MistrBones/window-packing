@@ -22,6 +22,7 @@ Currently I've opted to handle command generation for CLI usage on the Javascrip
 
 https://github.com/user-attachments/assets/7b6b472d-3773-4d30-b6a6-1c2c053e6b76
 
+View a live demo [here](http://window-packing.nicholas-churchill.com/)
   
   ## Usage
   The algorithm can be used by calling the `packing.js.` file via `node`
