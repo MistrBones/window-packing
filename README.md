@@ -25,7 +25,7 @@ https://github.com/user-attachments/assets/7b6b472d-3773-4d30-b6a6-1c2c053e6b76
 View a live demo [here](http://window-packing.nicholas-churchill.com/)
   
   ## Usage
-  The algorithm can be used by calling the `packing.js.` file via `node`
+  The algorithm can be used by calling the `packing.js` file via `node`
   
   The `packing.js` file does not have any inherently required arguments except for `--adapter` but in order to function it will need a `canvasWidth`, `canvasHeight`, and an array of `windows`objects (see below). Any arguments passed via the `Node` call will be passed to the requested adapter to keep any custom implementation logic separate from the algorithm. For example, in the `hyprland` adapter we pass a list of monitors, open windows, and the open workspace ID so that the script can identify the active workspace, which windows are open on that workspace, and additional x/y offsets to include for multiple monitor setups. See `scripts/hyprland.sh` for example usage.
 
